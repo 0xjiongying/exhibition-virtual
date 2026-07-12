@@ -730,16 +730,29 @@ function updateGrain(dt) {
 let audio = null;
 function toggleSound() {
   if (audio) {
-    audio.ctx.close(); audio = null;
+    audio.stop(); audio = null;
     btnSound.classList.remove('active');
     return;
   }
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const master = ctx.createGain(); master.gain.value = 0.0;
   master.connect(ctx.destination);
-  master.gain.linearRampToValueAtTime(1, ctx.currentTime + 4);
+  master.gain.linearRampToValueAtTime(1, ctx.currentTime + 5);
 
-  // room tone: filtered noise
+  // the room itself: a long, soft museum reverberation (generated impulse)
+  const ir = ctx.createBuffer(2, Math.floor(ctx.sampleRate * 3.6), ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.6);
+  }
+  const verb = ctx.createConvolver(); verb.buffer = ir;
+  const wet = ctx.createGain(); wet.gain.value = 0.6;
+  const dry = ctx.createGain(); dry.gain.value = 0.45;
+  const bus = ctx.createGain();               // instruments play into the room
+  bus.connect(dry).connect(master);
+  bus.connect(verb); verb.connect(wet).connect(master);
+
+  // room tone: barely-there filtered air, outside the reverb
   const len = ctx.sampleRate * 4;
   const buf = ctx.createBuffer(1, len, ctx.sampleRate);
   const ch = buf.getChannelData(0);
@@ -749,29 +762,79 @@ function toggleSound() {
     ch[i] = last * 3.2;
   }
   const noise = ctx.createBufferSource(); noise.buffer = buf; noise.loop = true;
-  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260;
-  const ng = ctx.createGain(); ng.gain.value = 0.05;
-  noise.connect(lp).connect(ng).connect(master);
+  const nlp = ctx.createBiquadFilter(); nlp.type = 'lowpass'; nlp.frequency.value = 220;
+  const ng = ctx.createGain(); ng.gain.value = 0.03;
+  noise.connect(nlp).connect(ng).connect(master);
   noise.start();
 
-  // patient piano — a few soft notes, far apart
-  const NOTES = [220, 261.63, 293.66, 329.63, 392];
-  function note() {
-    if (!audio) return;
-    const f = NOTES[Math.floor(Math.random() * NOTES.length)];
-    const t = ctx.currentTime;
-    for (const [mult, amp] of [[1, 1], [2, 0.28], [3, 0.1]]) {
-      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f * mult;
+  // harmony: a slow, patient progression — maj7 colors, one chord per long breath
+  const CHORDS = [
+    [261.63, 329.63, 392.00, 493.88], // Cmaj7
+    [220.00, 261.63, 329.63, 392.00], // Am7
+    [174.61, 220.00, 261.63, 329.63], // Fmaj7
+    [196.00, 246.94, 293.66, 349.23], // G7sus — resolves home
+  ];
+  let chordIdx = 0;
+  const timers = [];
+
+  // piano voice: soft attack, real overtones, long release into the reverb
+  function pianoNote(freq, vel, when) {
+    const t = ctx.currentTime + when;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2100;
+    lp.connect(bus);
+    for (const [mult, amp] of [[1, 1], [2, 0.38], [3, 0.15], [4, 0.06]]) {
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.value = freq * mult * (1 + (Math.random() - 0.5) * 0.0015);
       const g = ctx.createGain();
       g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.035 * amp, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 7);
-      o.connect(g).connect(master);
-      o.start(t); o.stop(t + 7.5);
+      g.gain.linearRampToValueAtTime(vel * amp * 0.05, t + 0.015 + mult * 0.005);
+      g.gain.exponentialRampToValueAtTime(0.00008, t + 7.5 - mult);
+      o.connect(g).connect(lp);
+      o.start(t); o.stop(t + 7.8);
     }
-    audio.timer = setTimeout(note, 9000 + Math.random() * 14000);
   }
-  audio = { ctx, timer: setTimeout(note, 3500) };
+
+  // phrases: one to three notes from the current chord, then a long silence
+  function phrase() {
+    if (!audio) return;
+    const chord = CHORDS[chordIdx];
+    if (Math.random() < 0.5) pianoNote(chord[0] / 2, 0.65, 0.2); // a low root grounds the room
+    let when = 0.4;
+    const n = 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) {
+      when += 0.9 + Math.random() * 1.5;
+      const f = chord[Math.floor(Math.random() * chord.length)] * (Math.random() < 0.3 ? 2 : 1);
+      pianoNote(f, 0.45 + Math.random() * 0.45, when);
+    }
+    timers.push(setTimeout(phrase, 9000 + Math.random() * 11000));
+  }
+
+  // light strings: two detuned voices on root and fifth, swelling and receding
+  const padGain = ctx.createGain(); padGain.gain.value = 0;
+  const padLp = ctx.createBiquadFilter(); padLp.type = 'lowpass'; padLp.frequency.value = 520;
+  padGain.connect(padLp); padLp.connect(bus);
+  const padOscs = [];
+  for (const det of [-4, 3]) {
+    const o = ctx.createOscillator(); o.type = 'triangle'; o.detune.value = det;
+    o.connect(padGain); o.start(); padOscs.push(o);
+  }
+  function breathe() {
+    if (!audio) return;
+    const chord = CHORDS[chordIdx];
+    padOscs[0].frequency.setTargetAtTime(chord[0], ctx.currentTime, 4);
+    padOscs[1].frequency.setTargetAtTime(chord[2], ctx.currentTime, 4);
+    const t = ctx.currentTime;
+    padGain.gain.cancelScheduledValues(t);
+    padGain.gain.setValueAtTime(padGain.gain.value, t);
+    padGain.gain.linearRampToValueAtTime(0.013, t + 9);   // breathe in
+    padGain.gain.linearRampToValueAtTime(0.003, t + 22);  // and out
+    chordIdx = (chordIdx + 1) % CHORDS.length;
+    timers.push(setTimeout(breathe, 24000));
+  }
+
+  audio = { ctx, stop() { timers.forEach(clearTimeout); ctx.close(); } };
+  timers.push(setTimeout(phrase, 2500));
+  breathe();
   btnSound.classList.add('active');
 }
 btnSound.addEventListener('click', toggleSound);
