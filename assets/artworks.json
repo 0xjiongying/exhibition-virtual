@@ -1,13 +1,13 @@
 [
-  { "title": "Calibration I — Primaries",   "artist": "Technical rehearsal", "year": "2026", "description": "Portrait color bars. Every card hangs exactly as its file was provided — fitted to its own aspect ratio, tone mapping bypassed, never cropped or reinterpreted.", "src": "assets/art/test-card.png" },
-  { "title": "Calibration II — Spectrum",   "artist": "Technical rehearsal", "year": "2026", "description": "Landscape bars across the visible spectrum, plus white and black anchors.", "src": "assets/art/card-bars-land.png" },
-  { "title": "Calibration III — Warm",      "artist": "Technical rehearsal", "year": "2026", "description": "Eight warm bands, deep oxide red to pale gold.", "src": "assets/art/card-warm.png" },
-  { "title": "Calibration IV — Cool",       "artist": "Technical rehearsal", "year": "2026", "description": "A portrait descent from midnight blue to pale green water.", "src": "assets/art/card-cool.png" },
-  { "title": "Calibration V — Grid",        "artist": "Technical rehearsal", "year": "2026", "description": "Square registration grid with center ring. Checks geometry, straightness, and glass reflection.", "src": "assets/art/card-grid.png" },
-  { "title": "Calibration VI — Ramp",       "artist": "Technical rehearsal", "year": "2026", "description": "Ten-step grayscale ramp, black to white. Checks tonal neutrality of the museum lighting.", "src": "assets/art/card-ramp.png" },
-  { "title": "Calibration VII — Spectrum",  "artist": "Technical rehearsal", "year": "2026", "description": "Second spectrum card for the east wall sightline.", "src": "assets/art/card-bars-land.png" },
-  { "title": "Calibration VIII — Warm",     "artist": "Technical rehearsal", "year": "2026", "description": "Warm bands, hung opposite the cool descent.", "src": "assets/art/card-warm.png" },
-  { "title": "Calibration IX — Cool",       "artist": "Technical rehearsal", "year": "2026", "description": "Cool descent, hung opposite the warm bands.", "src": "assets/art/card-cool.png" },
-  { "title": "Calibration X — Primaries",   "artist": "Technical rehearsal", "year": "2026", "description": "Portrait color bars closing the gallery sequence.", "src": "assets/art/test-card.png" },
-  { "title": "Calibration — The Threshold", "artist": "Technical rehearsal", "year": "2026", "description": "Ultramarine field with registration grid and ring. At the threshold, the museum borrows this card's color: its light spills onto the concrete as you approach.", "src": "assets/art/hero-card.png" }
+  { "title": "The Sleeping Colossus",   "artist": "Featured work — credit to come", "year": "", "description": "A monumental figure rests among snowbound peaks while islands drift overhead. First encounter of the visit.", "src": "assets/art/featured-01.png" },
+  { "title": "Reserved",                "artist": "Awaiting installation", "year": "", "description": "", "src": "" },
+  { "title": "Reserved",                "artist": "Awaiting installation", "year": "", "description": "", "src": "" },
+  { "title": "Portrait of the Captain", "artist": "Featured work — credit to come", "year": "", "description": "A painted captain and his companion, framed twice over — a painting of a painting.", "src": "assets/art/featured-03.png" },
+  { "title": "Vigil at the Frozen Sea", "artist": "Featured work — credit to come", "year": "", "description": "Wings folded against the cold, a figure watches a ring of light rise over the ice. The film pauses longest here.", "src": "assets/art/featured-02.png" },
+  { "title": "Reserved",                "artist": "Awaiting installation", "year": "", "description": "", "src": "" },
+  { "title": "Reserved",                "artist": "Awaiting installation", "year": "", "description": "", "src": "" },
+  { "title": "The Congregation",        "artist": "Featured work — credit to come", "year": "", "description": "A gathering rendered pixel by pixel — every one of them preserved exactly.", "src": "assets/art/featured-04.png" },
+  { "title": "Reserved",                "artist": "Awaiting installation", "year": "", "description": "", "src": "" },
+  { "title": "Reserved",                "artist": "Awaiting installation", "year": "", "description": "", "src": "" },
+  { "title": "Three at Golden Hour",    "artist": "Featured work — credit to come", "year": "", "description": "The hero wall. Three companions at sundown — and at the threshold, the museum borrows their golden light.", "src": "assets/art/featured-05.png" }
 ]

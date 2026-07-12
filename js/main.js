@@ -15,7 +15,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.96;
+renderer.toneMappingExposure = 1.06;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
@@ -123,7 +123,7 @@ sun.shadow.bias = -0.0004;
 sun.shadow.radius = 6;
 scene.add(sun, sun.target);
 
-const hemi = new THREE.HemisphereLight(0xfff6e6, 0xa89f8d, 0.48);
+const hemi = new THREE.HemisphereLight(0xfff6e6, 0xa89f8d, 0.55);
 scene.add(hemi);
 scene.add(new THREE.AmbientLight(0xfff8ee, 0.12));
 
@@ -168,8 +168,8 @@ for (const z of [12, -2, -16, -30, -40]) {
 
 const SLOTS = [];
 for (const z of [16, 6, -4, -14, -24]) {
-  SLOTS.push({ x: -HALL.halfW, z, ry:  Math.PI / 2, w: 2.6, h: 1.9 }); // west wall
-  SLOTS.push({ x:  HALL.halfW, z, ry: -Math.PI / 2, w: 2.6, h: 1.9 }); // east wall
+  SLOTS.push({ x: -HALL.halfW, z, ry:  Math.PI / 2, w: 3.2, h: 2.1 }); // west wall
+  SLOTS.push({ x:  HALL.halfW, z, ry: -Math.PI / 2, w: 3.2, h: 2.1 }); // east wall
 }
 SLOTS.push({ x: 0, z: HALL.zFar, ry: 0, w: 4.6, h: 3.1, hero: true }); // threshold wall
 
@@ -257,6 +257,15 @@ function buildArtwork(slot, data) {
     const normal = new THREE.Vector3(0, 0, 1).applyQuaternion(group.quaternion);
     artworks.push({ mesh: art, group, data, center: group.position.clone(), normal, w, h, swingT: -1 });
 
+    // a warm museum spotlight for every work — the artwork is the focal point.
+    // (loaded artwork is unlit for color fidelity; the spot warms frame and wall,
+    //  creating the halo without ever touching the pixels.)
+    const spot = new THREE.SpotLight(0xffe9cd, 55, 16, 0.46, 0.7, 1.5);
+    spot.position.copy(group.position).addScaledVector(normal, 2.6);
+    spot.position.y = HALL.height - 0.5;
+    spot.target.position.copy(group.position);
+    world.add(spot, spot.target);
+
     // the hero work lends its own palette to the hall at the threshold
     if (slot.hero && texture) {
       try {
@@ -304,6 +313,162 @@ fetch('assets/artworks.json')
   .then((list) => {
     SLOTS.forEach((slot, i) => buildArtwork(slot, { ...FALLBACK, ...(list[i] || {}) }));
   });
+
+/* ------------------------------------------------------------------ */
+/*  The guide — a hand that shows, never grabs                         */
+/* ------------------------------------------------------------------ */
+/*  Brushed aluminum, dark joints, a soft rim light of its own.        */
+/*  It moves like a museum guide: weighted, unhurried, precise.        */
+
+const hand = new THREE.Group();
+const handMat = new THREE.MeshStandardMaterial({ color: 0xd6d8dc, metalness: 0.85, roughness: 0.28, envMapIntensity: 1.1 });
+const jointMat = new THREE.MeshStandardMaterial({ color: 0x2b2b2e, metalness: 0.4, roughness: 0.45 });
+
+function segment(len, r) {
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 4, 10), handMat);
+  m.position.y = len / 2;
+  const joint = new THREE.Mesh(new THREE.SphereGeometry(r * 1.18, 12, 12), jointMat);
+  g.add(joint, m);
+  return g;
+}
+
+// palm and wrist
+const palm = new THREE.Mesh(new THREE.SphereGeometry(0.055, 20, 16), handMat);
+palm.scale.set(0.88, 1.08, 0.34);
+const wrist = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.055, 4, 10), handMat);
+wrist.position.y = -0.09;
+const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.027, 0.029, 0.013, 16), jointMat);
+cuff.position.y = -0.122;
+hand.add(palm, wrist, cuff);
+
+// four fingers + thumb, each a chain of pivoting segments
+const fingers = [];
+const FINGER_LENGTHS = [[0.036, 0.03, 0.023], [0.042, 0.034, 0.025], [0.04, 0.032, 0.024], [0.032, 0.026, 0.02]];
+for (let i = 0; i < 4; i++) {
+  const chain = [];
+  let parent = new THREE.Group();
+  parent.position.set(-0.036 + i * 0.024, 0.058, 0);
+  parent.rotation.y = (i - 1.5) * -0.06; // fingers fan slightly, like a real hand
+  hand.add(parent);
+  for (let s = 0; s < 3; s++) {
+    const seg = segment(FINGER_LENGTHS[i][s], 0.0085 - s * 0.0012);
+    if (s > 0) seg.position.y = FINGER_LENGTHS[i][s - 1];
+    parent.add(seg);
+    chain.push(seg);
+    parent = seg;
+  }
+  fingers.push(chain);
+}
+const thumbChain = [];
+{
+  let parent = new THREE.Group();
+  parent.position.set(-0.048, 0.01, 0.014);
+  parent.rotation.set(0.35, 0, 1.15);
+  hand.add(parent);
+  for (const len of [0.034, 0.028]) {
+    const seg = segment(len, 0.0095);
+    if (thumbChain.length) seg.position.y = 0.034;
+    parent.add(seg);
+    thumbChain.push(seg);
+    parent = seg;
+  }
+}
+hand.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+
+// the rim light travels with the hand — separation from the background
+const rim = new THREE.PointLight(0xe8f0ff, 5, 2.2, 2);
+rim.position.set(0.22, 0.3, 0.28);
+hand.add(rim);
+
+hand.scale.setScalar(2.1);      // a guide's presence on a museum stage
+hand.position.set(0, -1.5, 0);  // parked below the floor until called
+scene.add(hand);
+
+// ---- hand choreography -------------------------------------------------
+const handSpring = { vel: new THREE.Vector3(), curl: [0.12, 0.12, 0.12, 0.12], thumb: 0.25 };
+let handAnchor = null;   // { pos, look, gesture: 'point' | 'open', t }
+
+function callHand(art, gesture) {
+  const side = gesture === 'point' ? -0.3 : 0.3;
+  const lateral = new THREE.Vector3().crossVectors(art.normal, new THREE.Vector3(0, 1, 0));
+  // the guide stands below the work and gestures upward — never covering it
+  handAnchor = {
+    pos: art.center.clone()
+      .addScaledVector(art.normal, 0.85)
+      .addScaledVector(lateral, side)
+      .add(new THREE.Vector3(0, -art.h / 2 - 0.45, 0)),
+    near: art.center.clone()
+      .addScaledVector(art.normal, 0.5)
+      .addScaledVector(lateral, side * 0.5)
+      .add(new THREE.Vector3(0, -art.h / 2 - 0.15, 0)),
+    look: art.center.clone(),
+    gesture, t: 0,
+  };
+}
+function dismissHand() { handAnchor = null; }
+
+const findArt = (x, z) =>
+  artworks.find((a) => Math.abs(a.center.x - x) < 0.5 && Math.abs(a.center.z - z) < 0.5);
+
+let handBeat = null; // which film beat currently owns the hand
+function directHand(u) {
+  let beat = null;
+  if (u >= 0.30 && u <= 0.44) beat = 'macro';
+  else if (u >= 0.83 && u <= 0.97) beat = 'hero';
+  if (beat === handBeat) return;
+  handBeat = beat;
+  if (beat === 'macro') { const a = findArt(-HALL.halfW, -4); if (a) callHand(a, 'point'); }
+  else if (beat === 'hero') { const a = findArt(0, HALL.zFar); if (a) callHand(a, 'open'); }
+  else dismissHand();
+}
+
+const CURL_POSES = {
+  point: { fingers: [0.06, 0.95, 1.0, 1.0], thumb: 0.75 }, // index leads
+  open:  { fingers: [0.14, 0.1, 0.12, 0.16], thumb: 0.3 },  // palm offered
+};
+
+function updateHand(dt, t) {
+  let targetPos;
+  if (handAnchor) {
+    handAnchor.t += dt;
+    // hesitation: hold at a respectful distance, then come gently closer
+    targetPos = (handAnchor.t < 2.6 ? handAnchor.pos : handAnchor.near).clone();
+    // idle sway — the guide breathes
+    targetPos.x += Math.sin(t * 0.7) * 0.008;
+    targetPos.y += Math.sin(t * 0.9 + 1.3) * 0.01;
+    targetPos.z += Math.sin(t * 0.55 + 2.1) * 0.008;
+  } else {
+    targetPos = hand.position.clone().setY(-1.5); // sink out of sight where it stands
+  }
+
+  // weighted spring: momentum, friction, soft arrival — never a float, never a snap
+  handSpring.vel.addScaledVector(targetPos.clone().sub(hand.position), dt * 5.5);
+  handSpring.vel.multiplyScalar(Math.max(0, 1 - dt * 3.6));
+  hand.position.addScaledVector(handSpring.vel, dt);
+
+  if (handAnchor) {
+    // wrist rotation: fingers gesture toward the work, palm turned half toward the visitor
+    const toArt = handAnchor.look.clone().sub(hand.position).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), toArt);
+    const roll = new THREE.Quaternion().setFromAxisAngle(toArt, Math.sin(t * 0.4) * 0.1 - 0.35);
+    hand.quaternion.slerp(roll.multiply(q), Math.min(1, dt * 2.2));
+
+    // finger articulation with micro tremor
+    const pose = CURL_POSES[handAnchor.gesture];
+    for (let i = 0; i < 4; i++) {
+      const target = pose.fingers[i] + Math.sin(t * 3.1 + i * 1.7) * 0.012;
+      handSpring.curl[i] += (target - handSpring.curl[i]) * Math.min(1, dt * 4);
+      const c = handSpring.curl[i];
+      fingers[i][0].rotation.x = c * 0.55;
+      fingers[i][1].rotation.x = c * 0.85;
+      fingers[i][2].rotation.x = c * 0.6;
+    }
+    handSpring.thumb += (pose.thumb - handSpring.thumb) * Math.min(1, dt * 4);
+    thumbChain[0].rotation.x = handSpring.thumb * 0.5;
+    thumbChain[1].rotation.x = handSpring.thumb * 0.7;
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /*  The film — one continuous take                                     */
@@ -414,6 +579,8 @@ function setMode(next) {
   captionEl.classList.remove('show');
   currentChapter = -1;
   focus = null;
+  handBeat = null;
+  dismissHand();
   plateEl.classList.remove('show');
   if (mode === 'explore') {
     // hand the camera over exactly where the film left it
@@ -484,7 +651,8 @@ canvas.addEventListener('click', (e) => {
   if (!art) return;
   const dist = Math.max(art.w, art.h) * 1.25 + 0.8;
   returnPose = { pos: camera.position.clone(), yaw: yawT, pitch: pitchT };
-  art.swingT = 0; // the frame stirs as we come close
+  art.swingT = 0;        // the frame stirs as we come close
+  callHand(art, 'point'); // and the guide presents it
   focus = {
     pos: art.center.clone().addScaledVector(art.normal, dist),
     look: art.center.clone(),
@@ -500,6 +668,7 @@ canvas.addEventListener('click', (e) => {
 function unfocus() {
   if (focus) { focus.art.group.rotation.x = 0; focus.art.swingT = -1; }
   focus = null;
+  dismissHand();
   plateEl.classList.remove('show');
   if (returnPose) { yawT = returnPose.yaw; pitchT = returnPose.pitch; }
 }
@@ -678,6 +847,8 @@ function tick() {
 
     // the threshold — the hero work's light spills into the hall (scenes 06–07)
     heroGlow.intensity = 110 * easeInOut(THREE.MathUtils.clamp((u - 0.80) / 0.13, 0, 1));
+
+    directHand(u); // the guide enters on cue
   } else if (focus) {
     // approach one artwork — slow, deliberate, with a soft arrival
     camera.position.lerp(focus.pos, Math.min(1, dt * 1.6));
@@ -717,9 +888,10 @@ function tick() {
   }
   // the room warms half a stop after the cursor's click, and cools for each new screening
   lightWarm += (lightWarmT - lightWarm) * Math.min(1, dt * 0.9);
-  hemi.intensity = 0.48 * (1 + 0.17 * lightWarm);
+  hemi.intensity = 0.55 * (1 + 0.17 * lightWarm);
   sun.intensity = 2.4 * (1 + 0.09 * lightWarm);
 
+  updateHand(dt, t);
   updateCursor(dt);
   updateGrain(dt);
   renderer.render(scene, camera);
@@ -737,7 +909,7 @@ tick();
 
 // quiet debug hook (also lets the film be scrubbed: __exhibition.seek(0.5))
 window.__exhibition = {
-  renderer, scene, camera, artworks,
+  renderer, scene, camera, artworks, hand, callHand, dismissHand, updateHand,
   pick: (x, y) => pickArtwork({ clientX: x, clientY: y }),
   seek(u) { filmTime = u * DURATION; },
   renderOnce() {
