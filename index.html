@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hand by Hand — A Virtual Exhibition</title>
+<style>
+  :root {
+    --ink: #1c1a17;
+    --paper: #f4f1ea;
+    --muted: rgba(28, 26, 23, .55);
+    --hairline: rgba(28, 26, 23, .14);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body {
+    font-family: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", -apple-system, system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    cursor: none;
+  }
+  canvas.webgl { position: fixed; inset: 0; display: block; }
+
+  /* ---------- cinematic dressing ---------- */
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 4;
+    background: radial-gradient(ellipse at 50% 48%, transparent 58%, rgba(20,17,12,.28) 100%);
+  }
+  #grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    opacity: .055; image-rendering: pixelated;
+  }
+  .bar {
+    position: fixed; left: 0; right: 0; height: 0; background: #0d0c0a; z-index: 6;
+    transition: height 1.6s cubic-bezier(.6, 0, .2, 1); pointer-events: none;
+  }
+  #barTop { top: 0; } #barBottom { bottom: 0; }
+  body.cinema .bar { height: 7.2vh; }
+  #fade {
+    position: fixed; inset: 0; background: var(--paper); z-index: 20;
+    pointer-events: none; transition: opacity 3.2s ease;
+  }
+
+  /* ---------- typography ---------- */
+  #wordmark {
+    position: fixed; top: 34px; left: 42px; z-index: 8; pointer-events: none;
+    transition: opacity 1s ease;
+  }
+  #wordmark h1 {
+    font-size: 13px; font-weight: 600; letter-spacing: .34em; text-transform: uppercase;
+  }
+  #wordmark p {
+    margin-top: 6px; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  body.cinema #wordmark { color: #efece4; }
+  body.cinema #wordmark p { color: rgba(239,236,228,.55); }
+
+  #caption {
+    position: fixed; left: 50%; bottom: 11.5vh; transform: translateX(-50%);
+    z-index: 8; text-align: center; pointer-events: none; width: min(72ch, 86vw);
+    opacity: 0; transition: opacity 2.2s ease;
+  }
+  #caption.show { opacity: 1; }
+  #caption .kicker {
+    font-size: 10px; letter-spacing: .42em; text-transform: uppercase;
+    color: rgba(239,236,228,.5); margin-bottom: 10px;
+  }
+  #caption .line {
+    font-size: clamp(17px, 2.4vw, 27px); font-weight: 500; letter-spacing: .04em;
+    color: #efece4; line-height: 1.5;
+  }
+  body:not(.cinema) #caption .line { color: var(--ink); }
+  body:not(.cinema) #caption .kicker { color: var(--muted); }
+
+  /* artwork focus panel (explore mode) */
+  #plate {
+    position: fixed; left: 42px; bottom: 42px; z-index: 8; max-width: 340px;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 1.1s ease, transform 1.1s ease; pointer-events: none;
+  }
+  #plate.show { opacity: 1; transform: none; }
+  #plate .rule { width: 34px; height: 1px; background: var(--ink); opacity: .4; margin-bottom: 14px; }
+  #plate h2 { font-size: 19px; font-weight: 600; letter-spacing: .02em; }
+  #plate .meta { margin-top: 6px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  #plate .desc { margin-top: 12px; font-size: 13.5px; line-height: 1.65; color: rgba(28,26,23,.72); }
+
+  /* ---------- controls ---------- */
+  #controls {
+    position: fixed; right: 42px; bottom: 36px; z-index: 9; display: flex; gap: 8px;
+    transition: opacity 1s ease;
+  }
+  #controls button {
+    font: inherit; font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    padding: 10px 18px; border: 1px solid var(--hairline); border-radius: 999px;
+    background: rgba(244,241,234,.72); color: var(--ink); cursor: none;
+    backdrop-filter: blur(10px); transition: background .4s, color .4s, border-color .4s;
+  }
+  #controls button:hover { border-color: rgba(28,26,23,.4); }
+  #controls button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  body.cinema #controls button {
+    background: rgba(13,12,10,.35); color: rgba(239,236,228,.85); border-color: rgba(239,236,228,.22);
+  }
+  body.cinema #controls button.active { background: rgba(239,236,228,.92); color: #0d0c0a; }
+
+  #hint {
+    position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 8;
+    font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+    opacity: 0; transition: opacity 1.4s ease; pointer-events: none; text-align: center;
+  }
+  #hint.show { opacity: 1; }
+
+  /* ---------- humanized cursor ---------- */
+  #cursor {
+    position: fixed; z-index: 30; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--ink); pointer-events: none; top: 0; left: 0;
+    transform: translate(-50%, -50%);
+    transition: width .35s ease, height .35s ease, background .5s ease, opacity .6s ease;
+  }
+  #cursorRing {
+    position: fixed; z-index: 29; width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid rgba(28,26,23,.3); pointer-events: none; top: 0; left: 0;
+    transform: translate(-50%, -50%);
+    transition: width .45s ease, height .45s ease, border-color .5s ease, opacity .6s ease;
+  }
+  body.cinema #cursor { background: #efece4; }
+  body.cinema #cursorRing { border-color: rgba(239,236,228,.35); }
+  body.cursor-hot #cursor { width: 5px; height: 5px; }
+  body.cursor-hot #cursorRing { width: 52px; height: 52px; }
+  body.cursor-idle #cursor, body.cursor-idle #cursorRing { opacity: 0; }
+</style>
+</head>
+<body class="cinema cursor-idle">
+  <canvas class="webgl" id="stage"></canvas>
+
+  <div class="bar" id="barTop"></div>
+  <div class="bar" id="barBottom"></div>
+  <div id="vignette"></div>
+  <canvas id="grain"></canvas>
+  <div id="fade"></div>
+
+  <header id="wordmark">
+    <h1>Hand by Hand</h1>
+    <p>Humanity &amp; Technology · A Virtual Exhibition</p>
+  </header>
+
+  <div id="caption"><div class="kicker"></div><div class="line"></div></div>
+
+  <aside id="plate">
+    <div class="rule"></div>
+    <h2></h2>
+    <div class="meta"></div>
+    <div class="desc"></div>
+  </aside>
+
+  <div id="hint"></div>
+
+  <nav id="controls">
+    <button id="btnFilm" class="active">Film</button>
+    <button id="btnExplore">Explore</button>
+    <button id="btnSound">Sound</button>
+  </nav>
+
+  <div id="cursorRing"></div>
+  <div id="cursor"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
