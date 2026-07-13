@@ -1,0 +1,11 @@
+{
+  "name": "hand-by-hand-exhibition",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Hand by Hand — a cinematic virtual art exhibition. Buildless static site; `build` stages it into dist/ for hosts that expect a build output.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "npx --yes http-server -p 8173 -c-1 ."
+  }
+}

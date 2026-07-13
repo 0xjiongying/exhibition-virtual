@@ -1,0 +1,8 @@
+# Render blueprint — pins the correct static-site configuration so the
+# dashboard defaults can never point at a wrong publish directory again.
+services:
+  - type: web
+    name: hand-by-hand-exhibition
+    runtime: static
+    buildCommand: npm run build
+    staticPublishPath: dist
