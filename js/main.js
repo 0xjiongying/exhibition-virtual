@@ -1,8 +1,10 @@
 // HAND BY HAND — Humanity & Technology, Hand by Hand
-// A cinematic virtual exhibition. The architecture serves the artwork.
+// Dark Museum V2 — flagship cinematic hall. Architecture serves the artwork.
 
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ------------------------------------------------------------------ */
 /*  Stage                                                              */
@@ -15,34 +17,35 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.06;
+renderer.toneMappingExposure = 0.90;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xe2dbcc);
-scene.fog = new THREE.Fog(0xe2dbcc, 55, 240);
+scene.background = new THREE.Color(0x000000);
+scene.fog = new THREE.FogExp2(0x050505, 0.018);
 
 const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 300);
 camera.position.set(0, 7.5, 26);
 
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.06).texture;
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
 
 /* ------------------------------------------------------------------ */
-/*  Materials — limestone, plaster, concrete, oak, aluminum, brass     */
+/*  Materials — M keys preserved (slab / buildArtwork call sites)      */
+/*  Feel: black marble, graphite, dark concrete, gunmetal, titanium    */
 /* ------------------------------------------------------------------ */
 
 const M = {
-  limestone: new THREE.MeshStandardMaterial({ color: 0xccc3b1, roughness: 0.5, metalness: 0.0, envMapIntensity: 0.55 }),
-  plaster:   new THREE.MeshStandardMaterial({ color: 0xece7dd, roughness: 0.96, metalness: 0.0 }),
-  concrete:  new THREE.MeshStandardMaterial({ color: 0xc7c1b6, roughness: 0.85, metalness: 0.0 }),
-  concreteDark: new THREE.MeshStandardMaterial({ color: 0xb4aea3, roughness: 0.8, metalness: 0.0 }),
-  oak:       new THREE.MeshStandardMaterial({ color: 0xb08d5f, roughness: 0.62, metalness: 0.0, envMapIntensity: 0.35 }),
-  oakDark:   new THREE.MeshStandardMaterial({ color: 0x8a6c47, roughness: 0.58, metalness: 0.0 }),
-  aluminum:  new THREE.MeshStandardMaterial({ color: 0xcfd0d2, roughness: 0.35, metalness: 0.9, envMapIntensity: 0.8 }),
-  brass:     new THREE.MeshStandardMaterial({ color: 0xa9895a, roughness: 0.38, metalness: 0.85, envMapIntensity: 0.7 }),
-  water:     new THREE.MeshStandardMaterial({ color: 0x14130f, roughness: 0.04, metalness: 0.0, envMapIntensity: 1.6 }),
-  skylight:  new THREE.MeshBasicMaterial({ color: 0xfffdf6 }),
+  limestone: new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.18, metalness: 0.12, envMapIntensity: 1.35 }), // black marble / polished epoxy floor
+  plaster:   new THREE.MeshStandardMaterial({ color: 0x101010, roughness: 0.88, metalness: 0.02 }), // graphite walls
+  concrete:  new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.92, metalness: 0.04 }), // dark concrete
+  concreteDark: new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.55, metalness: 0.18, envMapIntensity: 0.7 }), // obsidian fins
+  oak:       new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.42, metalness: 0.55, envMapIntensity: 0.65 }), // gunmetal benches
+  oakDark:   new THREE.MeshStandardMaterial({ color: 0x1a1c1f, roughness: 0.38, metalness: 0.62, envMapIntensity: 0.7 }),
+  aluminum:  new THREE.MeshStandardMaterial({ color: 0x8a8e94, roughness: 0.32, metalness: 0.92, envMapIntensity: 0.95 }), // brushed titanium
+  brass:     new THREE.MeshStandardMaterial({ color: 0x9a9ea6, roughness: 0.28, metalness: 0.9, envMapIntensity: 1.0 }), // titanium sightlines / rails
+  water:     new THREE.MeshStandardMaterial({ color: 0x020203, roughness: 0.03, metalness: 0.05, envMapIntensity: 2.1 }), // black mirror pool
+  skylight:  new THREE.MeshBasicMaterial({ color: 0x1a1e24 }), // dim cold light-well (not bright white)
 };
 
 /* ------------------------------------------------------------------ */
@@ -97,21 +100,30 @@ for (let z = HALL.zFar + 10; z <= HALL.zNear - 10; z += 10) {
   slab(0.35, HALL.height, 0.9, M.concreteDark,  HALL.halfW - 0.18, HALL.height / 2, z + 5, true, true);
 }
 
-// minimal oak benches
+// minimal gunmetal benches
 for (const z of [4, -18]) {
   slab(2.6, 0.1, 0.55, M.oak, 0, 0.42, z, true, true);
   slab(2.2, 0.37, 0.42, M.oakDark, 0, 0.185, z, true, true);
 }
-// a single brass rail detail at the threshold
+// a single titanium rail detail at the threshold
 slab(5.2, 0.045, 0.045, M.brass, 0, 0.88, -38.6, false, true);
 slab(0.045, 0.88, 0.045, M.brass, -2.55, 0.44, -38.6, false, true);
 slab(0.045, 0.88, 0.045, M.brass,  2.55, 0.44, -38.6, false, true);
 
+// optional mid-hall graphite plinths / voids — do NOT change HALL clamps or SLOTS
+slab(1.1, 0.55, 1.1, M.concreteDark, -3.2, 0.275, -8, true, true);
+slab(0.9, 0.42, 0.9, M.concrete, 3.4, 0.21, 8, true, true);
+
 /* ------------------------------------------------------------------ */
-/*  Light — natural, warm white, from above                            */
+/*  Light — cool-neutral silhouette hall; artwork is the lamp          */
 /* ------------------------------------------------------------------ */
 
-const sun = new THREE.DirectionalLight(0xfff3e0, 2.4);
+const SUN_BASE = 0.28;
+const HEMI_BASE = 0.14;
+const AMBIENT_BASE = 0.04;
+const HERO_EXPLORE = 6;
+
+const sun = new THREE.DirectionalLight(0xc8d0dc, SUN_BASE);
 sun.position.set(5, 34, 6);
 sun.target.position.set(-1, 0, -10);
 sun.castShadow = true;
@@ -123,25 +135,26 @@ sun.shadow.bias = -0.0004;
 sun.shadow.radius = 6;
 scene.add(sun, sun.target);
 
-const hemi = new THREE.HemisphereLight(0xfff6e6, 0xa89f8d, 0.55);
+const hemi = new THREE.HemisphereLight(0xa8b4c4, 0x080808, HEMI_BASE);
 scene.add(hemi);
-scene.add(new THREE.AmbientLight(0xfff8ee, 0.12));
+const ambient = new THREE.AmbientLight(0x101018, AMBIENT_BASE);
+scene.add(ambient);
 
 // the threshold: light that belongs to the hero artwork, spilling into the hall.
 // its color is taken from the artwork itself once one is installed.
-const heroGlow = new THREE.PointLight(0xffe9cf, 0, 20, 1.8);
+const heroGlow = new THREE.PointLight(0xd8e0ec, 0, 20, 1.8);
 heroGlow.position.set(0, 3.1, -42.6);
 scene.add(heroGlow);
 
-// volumetric shafts under the skylight — soft, barely there
+// volumetric shafts under the skylight — cool, barely there
 function gradientTexture() {
   const c = document.createElement('canvas');
   c.width = 64; c.height = 256;
   const g = c.getContext('2d');
   const grad = g.createLinearGradient(0, 0, 0, 256);
-  grad.addColorStop(0, 'rgba(255,248,232,0.85)');
-  grad.addColorStop(0.55, 'rgba(255,248,232,0.22)');
-  grad.addColorStop(1, 'rgba(255,248,232,0)');
+  grad.addColorStop(0, 'rgba(180,200,220,0.55)');
+  grad.addColorStop(0.55, 'rgba(140,160,185,0.12)');
+  grad.addColorStop(1, 'rgba(120,140,165,0)');
   g.fillStyle = grad;
   g.fillRect(0, 0, 64, 256);
   const t = new THREE.CanvasTexture(c);
@@ -149,17 +162,47 @@ function gradientTexture() {
   return t;
 }
 const shaftMat = new THREE.MeshBasicMaterial({
-  map: gradientTexture(), transparent: true, opacity: 0.10,
+  map: gradientTexture(), transparent: true, opacity: 0.055,
   blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
 });
+const shafts = [];
 for (const z of [12, -2, -16, -30, -40]) {
   const a = new THREE.Mesh(new THREE.PlaneGeometry(3.4, HALL.height), shaftMat);
   a.position.set(0.4, HALL.height / 2, z);
   a.rotation.y = 0.25;
+  a.userData.baseY = a.position.y;
+  a.userData.phase = z * 0.07;
   const b = a.clone();
   b.rotation.y = -1.1;
   b.position.x = -0.2;
+  b.userData.baseY = b.position.y;
+  b.userData.phase = z * 0.07 + 1.7;
   world.add(a, b);
+  shafts.push(a, b);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Atmosphere — slow dust motes (off when prefers-reduced-motion)     */
+/* ------------------------------------------------------------------ */
+
+let dust = null;
+if (!reduceMotion) {
+  const COUNT = 400;
+  const positions = new Float32Array(COUNT * 3);
+  for (let i = 0; i < COUNT; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * (2 * HALL.halfW - 1.2);
+    positions[i * 3 + 1] = 0.4 + Math.random() * (HALL.height - 1.2);
+    positions[i * 3 + 2] = HALL.zFar + 2 + Math.random() * (LEN - 4);
+  }
+  const dustGeo = new THREE.BufferGeometry();
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const dustMat = new THREE.PointsMaterial({
+    color: 0xc8d0dc, size: 0.035, transparent: true, opacity: 0.04,
+    depthWrite: false, sizeAttenuation: true, blending: THREE.AdditiveBlending,
+  });
+  dust = new THREE.Points(dustGeo, dustMat);
+  dust.userData.baseY = 0;
+  world.add(dust);
 }
 
 /* ------------------------------------------------------------------ */
@@ -180,7 +223,7 @@ function linenTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 512;
   const g = c.getContext('2d');
-  g.fillStyle = '#e7dfcd';
+  g.fillStyle = '#141416';
   g.fillRect(0, 0, 512, 512);
   const img = g.getImageData(0, 0, 512, 512);
   for (let i = 0; i < img.data.length; i += 4) {
@@ -188,8 +231,8 @@ function linenTexture() {
     img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n;
   }
   g.putImageData(img, 0, 0);
-  g.globalAlpha = 0.05;
-  g.strokeStyle = '#8a8272';
+  g.globalAlpha = 0.06;
+  g.strokeStyle = '#2a2a2e';
   for (let y = 0; y < 512; y += 3) { g.beginPath(); g.moveTo(0, y); g.lineTo(512, y); g.stroke(); }
   for (let x = 0; x < 512; x += 3) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 512); g.stroke(); }
   const t = new THREE.CanvasTexture(c);
@@ -202,15 +245,15 @@ function labelTexture(data) {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 340;
   const g = c.getContext('2d');
-  g.fillStyle = '#f6f3ec';
+  g.fillStyle = '#101012';
   g.fillRect(0, 0, 512, 340);
-  g.fillStyle = '#1c1a17';
+  g.fillStyle = '#f2f2f0';
   g.font = '600 30px "Segoe UI", system-ui, sans-serif';
   g.fillText(data.title, 40, 84);
-  g.fillStyle = 'rgba(28,26,23,0.55)';
+  g.fillStyle = 'rgba(242,242,240,0.48)';
   g.font = '400 21px "Segoe UI", system-ui, sans-serif';
   g.fillText(`${data.artist}${data.year ? ' · ' + data.year : ''}`.toUpperCase(), 40, 128);
-  g.fillStyle = 'rgba(28,26,23,0.72)';
+  g.fillStyle = 'rgba(242,242,240,0.72)';
   g.font = '400 20px "Segoe UI", system-ui, sans-serif';
   const words = (data.description || '').split(' ');
   let line = '', y = 182;
@@ -233,7 +276,7 @@ function buildArtwork(slot, data) {
   let { w, h } = slot;
 
   const place = (texture) => {
-    // frame — natural oak, thin, with a brass sightline
+    // frame — gunmetal with a thin titanium sightline
     const frame = new THREE.Mesh(new THREE.BoxGeometry(w + 0.16, h + 0.16, 0.085), M.oakDark);
     frame.castShadow = true;
     const sight = new THREE.Mesh(new THREE.BoxGeometry(w + 0.045, h + 0.045, 0.088), M.brass);
@@ -257,11 +300,11 @@ function buildArtwork(slot, data) {
     const normal = new THREE.Vector3(0, 0, 1).applyQuaternion(group.quaternion);
     artworks.push({ mesh: art, group, data, center: group.position.clone(), normal, w, h, swingT: -1 });
 
-    // a warm museum spotlight for every work — the artwork is the focal point.
-    // (loaded artwork is unlit for color fidelity; the spot warms frame and wall,
+    // cool-neutral museum spotlight — artwork is the lamp.
+    // (loaded artwork is unlit for color fidelity; the spot lights frame and wall,
     //  creating the halo without ever touching the pixels.)
-    const spot = new THREE.SpotLight(0xffe9cd, 55, 16, 0.46, 0.7, 1.5);
-    spot.position.copy(group.position).addScaledVector(normal, 2.6);
+    const spot = new THREE.SpotLight(0xe8eef6, 42, 14, 0.38, 0.75, 1.6);
+    spot.position.copy(group.position).addScaledVector(normal, 2.4);
     spot.position.y = HALL.height - 0.5;
     spot.target.position.copy(group.position);
     world.add(spot, spot.target);
@@ -278,7 +321,7 @@ function buildArtwork(slot, data) {
         for (let i = 0; i < px.length; i += 4) { r += px[i]; g += px[i + 1]; b += px[i + 2]; }
         const n = px.length / 4;
         heroGlow.color.setRGB(r / n / 255, g / n / 255, b / n / 255);
-      } catch { /* keep the warm default */ }
+      } catch { /* keep the cool default */ }
     }
   };
 
@@ -557,7 +600,7 @@ let fading = false;
 const BEAT = { a: 0.44, b: 0.50 };            // film fraction of the cursor beat
 let beatT = -1;                                // -1: not started
 let beatClicked = false;
-let lightWarm = 0, lightWarmT = 0;             // the click warms the room half a stop
+let lightWarm = 0, lightWarmT = 0;             // cursor click: half-stop fill raise (cool)
 const bezier = (p0, p1, p2, t) => {
   const s = 1 - t;
   return s * s * p0 + 2 * s * t * p1 + t * t * p2;
@@ -724,7 +767,8 @@ function updateGrain(dt) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sound — room tone and a distant, patient piano                     */
+/*  Sound — click-only; room tone + dark drone under piano / strings   */
+/*  Future: footsteps + THREE.AudioListener on camera (spatial).       */
 /* ------------------------------------------------------------------ */
 
 let audio = null;
@@ -735,6 +779,8 @@ function toggleSound() {
     return;
   }
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // buses: master ← dry / wet / roomTone / darkDrone
   const master = ctx.createGain(); master.gain.value = 0.0;
   master.connect(ctx.destination);
   master.gain.linearRampToValueAtTime(1, ctx.currentTime + 5);
@@ -746,13 +792,13 @@ function toggleSound() {
     for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.6);
   }
   const verb = ctx.createConvolver(); verb.buffer = ir;
-  const wet = ctx.createGain(); wet.gain.value = 0.6;
-  const dry = ctx.createGain(); dry.gain.value = 0.45;
-  const bus = ctx.createGain();               // instruments play into the room
-  bus.connect(dry).connect(master);
-  bus.connect(verb); verb.connect(wet).connect(master);
+  const wet = ctx.createGain(); wet.gain.value = 0.55;
+  const dry = ctx.createGain(); dry.gain.value = 0.42;
+  const instrumentBus = ctx.createGain(); // piano + strings into the room
+  instrumentBus.connect(dry).connect(master);
+  instrumentBus.connect(verb); verb.connect(wet).connect(master);
 
-  // room tone: barely-there filtered air, outside the reverb
+  // roomTone: barely-there filtered air, outside the reverb
   const len = ctx.sampleRate * 4;
   const buf = ctx.createBuffer(1, len, ctx.sampleRate);
   const ch = buf.getChannelData(0);
@@ -763,9 +809,23 @@ function toggleSound() {
   }
   const noise = ctx.createBufferSource(); noise.buffer = buf; noise.loop = true;
   const nlp = ctx.createBiquadFilter(); nlp.type = 'lowpass'; nlp.frequency.value = 220;
-  const ng = ctx.createGain(); ng.gain.value = 0.03;
-  noise.connect(nlp).connect(ng).connect(master);
+  const roomTone = ctx.createGain(); roomTone.gain.value = 0.022;
+  noise.connect(nlp).connect(roomTone).connect(master);
   noise.start();
+
+  // darkDrone: quiet sub-room presence under the existing piano / strings
+  const darkDrone = ctx.createGain(); darkDrone.gain.value = 0.0;
+  darkDrone.connect(master);
+  darkDrone.gain.linearRampToValueAtTime(0.012, ctx.currentTime + 8);
+  const droneOscs = [];
+  for (const [freq, type, det] of [[55, 'sine', 0], [82.5, 'triangle', -6], [110, 'sine', 3]]) {
+    const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq; o.detune.value = det;
+    const g = ctx.createGain(); g.gain.value = type === 'triangle' ? 0.35 : 0.55;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 140;
+    o.connect(g).connect(lp).connect(darkDrone);
+    o.start();
+    droneOscs.push(o);
+  }
 
   // harmony: a slow, patient progression — maj7 colors, one chord per long breath
   const CHORDS = [
@@ -781,7 +841,7 @@ function toggleSound() {
   function pianoNote(freq, vel, when) {
     const t = ctx.currentTime + when;
     const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2100;
-    lp.connect(bus);
+    lp.connect(instrumentBus);
     for (const [mult, amp] of [[1, 1], [2, 0.38], [3, 0.15], [4, 0.06]]) {
       const o = ctx.createOscillator(); o.type = 'sine';
       o.frequency.value = freq * mult * (1 + (Math.random() - 0.5) * 0.0015);
@@ -812,7 +872,7 @@ function toggleSound() {
   // light strings: two detuned voices on root and fifth, swelling and receding
   const padGain = ctx.createGain(); padGain.gain.value = 0;
   const padLp = ctx.createBiquadFilter(); padLp.type = 'lowpass'; padLp.frequency.value = 520;
-  padGain.connect(padLp); padLp.connect(bus);
+  padGain.connect(padLp); padLp.connect(instrumentBus);
   const padOscs = [];
   for (const det of [-4, 3]) {
     const o = ctx.createOscillator(); o.type = 'triangle'; o.detune.value = det;
@@ -832,7 +892,14 @@ function toggleSound() {
     timers.push(setTimeout(breathe, 24000));
   }
 
-  audio = { ctx, stop() { timers.forEach(clearTimeout); ctx.close(); } };
+  audio = {
+    ctx,
+    stop() {
+      timers.forEach(clearTimeout);
+      droneOscs.forEach((o) => { try { o.stop(); } catch { /* already stopped */ } });
+      ctx.close();
+    },
+  };
   timers.push(setTimeout(phrase, 2500));
   breathe();
   btnSound.classList.add('active');
@@ -864,20 +931,20 @@ function tick() {
   if (mode === 'film') {
     filmTime += dt;
     let u = (filmTime % DURATION) / DURATION;
-    // near the end, fade to paper and let the film begin again
+    // near the end, fade to black and let the film begin again
     if (u > 0.985 && !fading) { fading = true; fadeEl.style.opacity = 1; }
     if (u < 0.02 && fading) { fading = false; fadeEl.style.opacity = 0; }
 
     const e = easeInOut(THREE.MathUtils.clamp(u, 0, 1));
     rail.getPoint(e, tmpPos);   // parameter-space: waypoint i on the rail meets
     gaze.getPoint(e, tmpLook);  // waypoint i of the gaze, so shots stay composed
-    // the camera breathes — almost imperceptibly
+    // the camera breathes — almost imperceptibly (disabled for reduced motion)
     tmpPos.y += Math.sin(t * 0.5) * 0.015;
     camera.position.lerp(tmpPos, Math.min(1, dt * 4));
     const q = camera.quaternion.clone();
     camera.lookAt(tmpLook);
     camera.quaternion.slerp(q, Math.max(0, 1 - dt * 2.2)); // damped gaze — natural, unhurried
-    camera.fov = 38 + Math.sin(t * 0.23) * 0.5;            // focus breathing
+    camera.fov = reduceMotion ? 38 : 38 + Math.sin(t * 0.23) * 0.22; // quieter FOV breathe in darkness
     camera.updateProjectionMatrix();
     updateCaptions(u);
 
@@ -909,7 +976,7 @@ function tick() {
     if (u < 0.02) lightWarmT = 0;                           // each screening starts cold
 
     // the threshold — the hero work's light spills into the hall (scenes 06–07)
-    heroGlow.intensity = 110 * easeInOut(THREE.MathUtils.clamp((u - 0.80) / 0.13, 0, 1));
+    heroGlow.intensity = 85 * easeInOut(THREE.MathUtils.clamp((u - 0.80) / 0.13, 0, 1));
 
     directHand(u); // the guide enters on cue
   } else if (focus) {
@@ -925,9 +992,9 @@ function tick() {
       focus.art.group.rotation.x = 0.016 * Math.exp(-1.4 * s) * Math.sin(5.2 * s);
     }
   } else {
-    // explore — damped look, weighted walk
-    yaw += (yawT - yaw) * Math.min(1, dt * 6);
-    pitch += (pitchT - pitch) * Math.min(1, dt * 6);
+    // explore — softer look damping, more walk inertia
+    yaw += (yawT - yaw) * Math.min(1, dt * 3.8);
+    pitch += (pitchT - pitch) * Math.min(1, dt * 3.8);
     camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
 
     const dir = new THREE.Vector3();
@@ -936,9 +1003,9 @@ function tick() {
     const acc = new THREE.Vector3()
       .addScaledVector(dir, move.f - move.b)
       .addScaledVector(side, move.r - move.l);
-    if (acc.lengthSq() > 0) acc.normalize().multiplyScalar(9);
+    if (acc.lengthSq() > 0) acc.normalize().multiplyScalar(6.5);
     vel.addScaledVector(acc, dt);
-    vel.multiplyScalar(Math.max(0, 1 - dt * 4)); // friction, momentum
+    vel.multiplyScalar(Math.max(0, 1 - dt * 2.6)); // more friction lag / glide
     camera.position.addScaledVector(vel, dt);
     camera.position.x = THREE.MathUtils.clamp(camera.position.x, -HALL.halfW + 0.8, HALL.halfW - 0.8);
     camera.position.z = THREE.MathUtils.clamp(camera.position.z, HALL.zFar + 1.4, HALL.zNear - 1.4);
@@ -946,13 +1013,26 @@ function tick() {
   }
 
   if (mode !== 'film') {
-    // in explore, the threshold keeps a quiet presence
-    heroGlow.intensity += (14 - heroGlow.intensity) * Math.min(1, dt * 2);
+    // in explore, the threshold keeps a quieter presence
+    heroGlow.intensity += (HERO_EXPLORE - heroGlow.intensity) * Math.min(1, dt * 2);
   }
-  // the room warms half a stop after the cursor's click, and cools for each new screening
+  // lightWarm: half-stop raise of fill/hemi after cursor click (no warm sun flood)
   lightWarm += (lightWarmT - lightWarm) * Math.min(1, dt * 0.9);
-  hemi.intensity = 0.55 * (1 + 0.17 * lightWarm);
-  sun.intensity = 2.4 * (1 + 0.09 * lightWarm);
+  hemi.intensity = HEMI_BASE * (1 + 0.35 * lightWarm);
+  ambient.intensity = AMBIENT_BASE * (1 + 0.4 * lightWarm);
+  sun.intensity = SUN_BASE * (1 + 0.12 * lightWarm);
+
+  // atmosphere drift — shafts + dust (off when prefers-reduced-motion)
+  if (!reduceMotion) {
+    for (const s of shafts) {
+      s.position.y = s.userData.baseY + Math.sin(t * 0.18 + s.userData.phase) * 0.08;
+    }
+    shaftMat.opacity = 0.045 + Math.sin(t * 0.12) * 0.012;
+    if (dust) {
+      dust.position.y = Math.sin(t * 0.07) * 0.12;
+      dust.rotation.y = t * 0.008;
+    }
+  }
 
   updateHand(dt, t);
   updateCursor(dt);
@@ -966,7 +1046,7 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// arrive from white
+// arrive from black
 requestAnimationFrame(() => { fadeEl.style.opacity = 0; });
 tick();
 

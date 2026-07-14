@@ -3,6 +3,10 @@
 A cinematic, browser-based concept for a virtual art exhibition.
 Theme: **Humanity & Technology, Hand by Hand.**
 
+Visual language (V2): a dark cinematic museum — pure black architecture,
+graphite walls, artwork as the only vibrant light. Film and Explore share
+one light-on-dark UI.
+
 Two documents make up this project:
 
 - [TREATMENT.md](TREATMENT.md) — the concept film, scene by scene.
@@ -24,14 +28,14 @@ not load the artwork manifest — serve it over HTTP.)
 - **Film** — a single ~2½-minute continuous take: crane arrival, walking
   dolly, macro encounters, the threshold. Letterboxed, captioned, grain.
   Midway, a scripted cursor appears once — curved path, hesitation, one
-  quiet click — and the room lighting warms half a stop in answer. In the
+  quiet click — and fill lighting lifts half a stop in answer. In the
   final scenes the hero artwork's own light spills into the hall (its color
   is sampled from the installed artwork).
 - **Explore** — drag to look, `W A S D` to walk, click any work to approach
   it (the frame swings a few millimetres; the label plate appears), `Esc`
   to step back.
-- **Sound** — optional generated room tone and a distant patient piano.
-  Off by default.
+- **Sound** — optional generated room tone, a quiet dark-room drone, and a
+  distant patient piano. Off by default; click to enable (no autoplay).
 
 ## Installing the artwork
 
@@ -47,4 +51,4 @@ pixel-for-pixel from files you provide:
    ratio — never cropped — and rendered with tone mapping disabled so the
    colors on screen are exactly the colors in the file.
 
-Walls without a `src` hold neutral linen and a *Reserved* label.
+Walls without a `src` hold a dark graphite reserved canvas and a *Reserved* label.
