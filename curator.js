@@ -40,6 +40,7 @@ const SLOTS = [
   ['featured-08', 'The Offering', 'hand with glowing seal'],
   ['featured-09', 'Rest Easy', 'pink sleeper with rabbits'],
   ['featured-10', 'Through the Vortex', 'chase into the light'],
+  ['featured-11', 'After Hours', 'neon lowrider alley'],
 ];
 const grid = document.getElementById('grid');
 for (const [name, title, hint] of SLOTS) {
@@ -78,7 +79,7 @@ http.createServer((req, res) => {
   if (req.method === 'POST' && url.pathname === '/install') {
     const name = (url.searchParams.get('name') || '').replace(/[^\w-]/g, '');
     const ext = (url.searchParams.get('ext') || 'png').replace(/[^a-z]/g, '');
-    if (!/^featured-\d\d$/.test(name)) { res.statusCode = 400; res.end('bad slot name'); return; }
+    if (!/^featured-\d{2}$/.test(name)) { res.statusCode = 400; res.end('bad slot name'); return; }
     const chunks = [];
     req.on('data', (c) => chunks.push(c));
     req.on('end', () => {

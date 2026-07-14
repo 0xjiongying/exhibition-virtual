@@ -18,7 +18,7 @@
     "artist": "Featured work — credit to come",
     "year": "",
     "description": "Over one shoulder: a grin, a pug, a cat, and a sky full of sparks.",
-    "src": "assets/art/featured-07.webp"
+    "src": "assets/art/featured-07.png"
   },
   {
     "title": "Portrait of the Captain",
@@ -39,7 +39,7 @@
     "artist": "Featured work — credit to come",
     "year": "",
     "description": "An open hand, a glowing seal, and light bending around the gift.",
-    "src": "assets/art/featured-08.webp"
+    "src": "assets/art/featured-08.png"
   },
   {
     "title": "Rest Easy",
@@ -63,11 +63,11 @@
     "src": "assets/art/featured-10.webp"
   },
   {
-    "title": "Reserved",
-    "artist": "Awaiting installation",
+    "title": "After Hours",
+    "artist": "Featured work — credit to come",
     "year": "",
-    "description": "",
-    "src": ""
+    "description": "Neon underglow, wet asphalt, and one cool companion leaning on a classic ride.",
+    "src": "assets/art/featured-11.png"
   },
   {
     "title": "Three at Golden Hour",
