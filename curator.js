@@ -30,17 +30,17 @@ byte-for-byte in <code>assets/art/</code> under the right name. Reload the exhib
 <div class="grid" id="grid"></div>
 <script>
 const SLOTS = [
-  ['featured-01', 'The Sleeping Colossus', 'mountain colossus banner'],
-  ['featured-02', 'Vigil at the Frozen Sea', 'winged figure on the ice'],
-  ['featured-03', 'Portrait of the Captain', 'pirate captain portrait'],
-  ['featured-04', 'The Congregation', 'pixel seal gathering'],
-  ['featured-05', 'Three at Golden Hour', 'sunset trio — HERO WALL'],
-  ['featured-06', 'Skrumpeys — DN Forever', 'chrome-pink wordmark'],
-  ['featured-07', 'The Artist and Familiars', 'artist with pug and cat'],
-  ['featured-08', 'The Offering', 'hand with glowing seal'],
-  ['featured-09', 'Rest Easy', 'pink sleeper with rabbits'],
-  ['featured-10', 'Through the Vortex', 'chase into the light'],
-  ['featured-11', 'After Hours', 'neon lowrider alley'],
+  ['featured-01', 'Guardian of the Monad Peaks', 'mountain colossus banner'],
+  ['featured-02', 'Angel at the Frozen Gate', 'winged figure on the ice'],
+  ['featured-03', 'Portrait of a Pirate Duck', 'pirate duck portrait'],
+  ['featured-04', 'The Gathering at the Purple Altar', 'pixel seal gathering'],
+  ['featured-05', 'A Feast Among Friends', 'hot pot feast — HERO WALL'],
+  ['featured-06', 'Heroes Through the Rift', 'heroes bursting from portal'],
+  ['featured-07', 'Companions in the Pack', 'artist with pug and cat'],
+  ['featured-08', 'The Neon Offering', 'hand with glowing Monad seal'],
+  ['featured-09', 'Hello, Emerald World', 'green familiar hello world'],
+  ['featured-10', 'Pastel Pepe Valentine', 'pastel pepe with rabbits'],
+  ['featured-11', 'Pink Underglow', 'neon lowrider alley'],
 ];
 const grid = document.getElementById('grid');
 for (const [name, title, hint] of SLOTS) {
