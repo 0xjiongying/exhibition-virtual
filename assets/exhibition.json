@@ -6,8 +6,8 @@
   "curator": "Hand by Hand Curatorial Desk",
   "description": "A cinematic virtual museum experience built for the Monad hackathon vision: art at the center, technology invisible. The Exhibition NFT represents ownership of this exhibition experience, architecture, and metadata — never the third-party artworks on the walls.",
   "theme": "Humanity & Technology, Hand by Hand",
-  "website": "https://github.com/exhibition-virtual",
-  "github": "https://github.com/exhibition-virtual",
+  "website": "https://0xjiongying.github.io/exhibition-virtual/",
+  "github": "https://github.com/0xjiongying/exhibition-virtual",
   "version": "1.0.0-phase1",
   "coverImage": "assets/cover/exhibition-cover.svg",
   "chain": {
