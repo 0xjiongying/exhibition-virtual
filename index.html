@@ -98,7 +98,8 @@
     background: var(--glass); color: rgba(242,242,240,.82); cursor: none;
     backdrop-filter: blur(12px); transition: background .35s, color .35s, border-color .35s;
   }
-  #controls button:hover { border-color: rgba(242,242,240,.32); color: var(--ink); }
+  #controls button { transition: background .35s, color .35s, border-color .35s, transform .45s cubic-bezier(.4, 0, .2, 1); }
+  #controls button:hover { border-color: rgba(242,242,240,.32); color: var(--ink); transform: translateY(-1px); }
   #controls button.active {
     background: var(--glass-strong); color: var(--ink);
     border-color: rgba(242,242,240,.38);
@@ -150,9 +151,10 @@
     font: inherit; font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
     padding: 9px 14px; border: 1px solid var(--hairline); border-radius: 2px;
     background: var(--glass); color: rgba(242,242,240,.82);
-    backdrop-filter: blur(12px); transition: background .35s, color .35s, border-color .35s;
+    backdrop-filter: blur(14px);
+    transition: background .35s, color .35s, border-color .35s, transform .45s cubic-bezier(.4, 0, .2, 1);
   }
-  .mp-btn:hover { border-color: rgba(242,242,240,.32); color: var(--ink); }
+  .mp-btn:hover { border-color: rgba(242,242,240,.32); color: var(--ink); transform: translateY(-1px); }
   .mp-btn.active, .mp-chips button.active {
     background: var(--glass-strong); color: var(--ink);
     border-color: rgba(242,242,240,.38);
@@ -169,12 +171,24 @@
   .mp-panel {
     position: fixed; top: 96px; right: 42px; z-index: 12;
     width: min(360px, calc(100vw - 48px)); max-height: calc(100vh - 160px);
-    overflow: auto; padding: 22px 22px 18px;
+    overflow: auto; padding: 24px 24px 20px;
     background: var(--glass-strong); border: 1px solid var(--hairline);
-    backdrop-filter: blur(18px); color: var(--ink);
+    backdrop-filter: blur(24px) saturate(1.05); color: var(--ink);
     pointer-events: auto; cursor: default;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, .55);
   }
   .mp-panel[hidden] { display: none !important; }
+  @keyframes mpPanelIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+  .mp-panel:not([hidden]) { animation: mpPanelIn .55s cubic-bezier(.4, 0, .2, 1); }
+  .mp-panel::-webkit-scrollbar { width: 8px; }
+  .mp-panel::-webkit-scrollbar-thumb {
+    background: rgba(242, 242, 240, .14); border-radius: 4px;
+    border: 2px solid transparent; background-clip: content-box;
+  }
+  .mp-panel::-webkit-scrollbar-track { background: transparent; }
   .mp-panel-h {
     display: flex; align-items: baseline; justify-content: space-between;
     gap: 12px; margin-bottom: 12px;
@@ -225,11 +239,15 @@
     padding: 6px 10px; border: 1px solid var(--hairline); border-radius: 2px;
     background: transparent; color: rgba(242,242,240,.7);
   }
+  .mp-chips button { transition: color .35s ease, border-color .35s ease, background .35s ease; }
   .mp-chips button:hover { color: var(--ink); border-color: rgba(242,242,240,.3); }
   .mp-navlist button.mp-link {
     display: block; width: 100%; text-align: left; border: 0; background: transparent;
-    color: inherit; padding: 8px 0; border-top: 1px solid rgba(242,242,240,.08);
+    color: inherit; padding: 8px 0 8px 0; border-top: 1px solid rgba(242,242,240,.08);
+    transition: padding-left .4s cubic-bezier(.4, 0, .2, 1), color .35s ease;
   }
+  .mp-navlist button.mp-link:hover { padding-left: 8px; }
+  .mp-navlist button.mp-link:hover strong { color: var(--ink); }
   .mp-navlist strong { display: block; font-size: 13px; font-weight: 600; }
   .mp-navlist .mp-muted { font-size: 11px; }
 

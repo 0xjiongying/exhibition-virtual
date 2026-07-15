@@ -17,13 +17,16 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// the architecture never moves — render shadows only when something does
+renderer.shadowMap.autoUpdate = false;
+let shadowDirty = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.90;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
-scene.fog = new THREE.FogExp2(0x050505, 0.018);
+scene.fog = new THREE.FogExp2(0x050505, 0.014); // thinner haze — the eye reaches further, the museum reads larger
 
 const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 300);
 camera.position.set(0, 7.5, 26);
@@ -36,10 +39,40 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture
 /*  Feel: black marble, graphite, dark concrete, gunmetal, titanium    */
 /* ------------------------------------------------------------------ */
 
+// micro roughness variation — matte surfaces catch light unevenly, like real stone
+function roughnessNoiseTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#e2e2e2';
+  g.fillRect(0, 0, 256, 256);
+  const img = g.getImageData(0, 0, 256, 256);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 46;
+    img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  // soft blotches so the variation has scale, not just grain
+  g.globalAlpha = 0.10;
+  for (let i = 0; i < 26; i++) {
+    const r = 20 + Math.random() * 60;
+    const grad = g.createRadialGradient(Math.random() * 256, Math.random() * 256, 0, Math.random() * 256, Math.random() * 256, r);
+    grad.addColorStop(0, Math.random() < 0.5 ? '#c8c8c8' : '#f4f4f4');
+    grad.addColorStop(1, 'rgba(226,226,226,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 256, 256);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(3, 3);
+  return t;
+}
+const roughNoise = roughnessNoiseTexture();
+
 const M = {
-  limestone: new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.18, metalness: 0.12, envMapIntensity: 1.35 }), // black marble / polished epoxy floor
-  plaster:   new THREE.MeshStandardMaterial({ color: 0x101010, roughness: 0.88, metalness: 0.02 }), // graphite walls
-  concrete:  new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.92, metalness: 0.04 }), // dark concrete
+  limestone: new THREE.MeshPhysicalMaterial({ color: 0x060607, roughness: 0.1, metalness: 0.5, clearcoat: 0.2, clearcoatRoughness: 0.15, envMapIntensity: 0.25 }), // polished obsidian floor — sharp sheen, no gray wash (env kept low: RoomEnvironment is bright)
+  plaster:   new THREE.MeshStandardMaterial({ color: 0x101010, roughness: 0.98, roughnessMap: roughNoise, metalness: 0.02 }), // graphite walls
+  concrete:  new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 1.0, roughnessMap: roughNoise, metalness: 0.04 }), // dark concrete
   concreteDark: new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.55, metalness: 0.18, envMapIntensity: 0.7 }), // obsidian fins
   oak:       new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.42, metalness: 0.55, envMapIntensity: 0.65 }), // gunmetal benches
   oakDark:   new THREE.MeshStandardMaterial({ color: 0x1a1c1f, roughness: 0.38, metalness: 0.62, envMapIntensity: 0.7 }),
@@ -70,30 +103,136 @@ function slab(w, h, d, mat, x, y, z, receive = true, cast = false) {
 const LEN = HALL.zNear - HALL.zFar;           // 76
 const zMid = (HALL.zNear + HALL.zFar) / 2;    // -8
 
+// The hall opens into an atrium void above the gallery band — cornices at 9m,
+// clerestory walls rising to the skylight at 17m. Walk clamps and SLOTS untouched.
+const ATRIUM = { top: 17, innerHalfW: 3.9 };
+
 // floor + polished dark stone strip near the threshold ("water")
-slab(2 * HALL.halfW + 4, 0.4, LEN + 8, M.limestone, 0, -0.2, zMid);
+slab(2 * HALL.halfW + 1.2, 0.4, LEN + 1.2, M.limestone, 0, -0.2, zMid);
 const water = slab(7, 0.04, 4.6, M.water, 0, 0.012, -41.5);
 
-// walls
-slab(0.6, HALL.height, LEN, M.plaster, -HALL.halfW - 0.3, HALL.height / 2, zMid);
-slab(0.6, HALL.height, LEN, M.plaster,  HALL.halfW + 0.3, HALL.height / 2, zMid);
-// end walls — raw concrete at the threshold, plaster behind the entrance
-slab(2 * HALL.halfW + 1.2, HALL.height, 0.6, M.concrete, 0, HALL.height / 2, HALL.zFar - 0.3);
-slab(2 * HALL.halfW + 1.2, HALL.height, 0.6, M.plaster, 0, HALL.height / 2, HALL.zNear + 0.3);
+// gallery walls — segmented, with framed voids opening into hidden side chambers.
+// openings sit between the artwork slots; visitors see beyond but never enter.
+const OPENINGS = { west: [11, -19], east: [1, -29] };
+const OPEN_W = 2.4, OPEN_H = 3.6;
 
-// ceiling slabs leaving a continuous skylight ribbon (x ∈ [-1.5, 1.5])
-const slabW = HALL.halfW - 1.5;
-slab(slabW, 0.5, LEN, M.plaster, -(1.5 + slabW / 2), HALL.height + 0.25, zMid);
-slab(slabW, 0.5, LEN, M.plaster,  (1.5 + slabW / 2), HALL.height + 0.25, zMid);
+function segmentedWall(xCenter, openings) {
+  const cuts = [...openings].sort((a, b) => a - b);
+  let from = HALL.zFar;
+  for (const oz of cuts) {
+    const to = oz - OPEN_W / 2;
+    if (to > from) slab(0.6, HALL.height, to - from, M.plaster, xCenter, HALL.height / 2, (from + to) / 2);
+    // lintel above the void — the opening reads as a carved frame
+    slab(0.6, HALL.height - OPEN_H, OPEN_W, M.plaster, xCenter, OPEN_H + (HALL.height - OPEN_H) / 2, oz);
+    from = oz + OPEN_W / 2;
+  }
+  if (HALL.zNear > from) slab(0.6, HALL.height, HALL.zNear - from, M.plaster, xCenter, HALL.height / 2, (from + HALL.zNear) / 2);
+}
+segmentedWall(-HALL.halfW - 0.3, OPENINGS.west);
+segmentedWall(HALL.halfW + 0.3, OPENINGS.east);
+
+// hidden side chambers — a pool of dim light and a lone plinth, glimpsed through each void
+const haloChamberTex = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+  grad.addColorStop(0.5, 'rgba(255,255,255,0.25)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+})();
+function sideChamber(side, z) {
+  const dir = side === 'west' ? -1 : 1;
+  const cx = dir * (HALL.halfW + 3.9);              // chamber center, 6.6..12.6 out
+  slab(6.0, 0.4, 6, M.limestone, cx, -0.21, z);      // floor a hair below the hall's — no seam fight
+  slab(0.6, 4.6, 6, M.concrete, dir * (HALL.halfW + 6.9), 2.3, z);   // far wall
+  slab(6.0, 4.6, 0.6, M.concrete, cx, 2.3, z - 3.3); // flanks
+  slab(6.0, 4.6, 0.6, M.concrete, cx, 2.3, z + 3.3);
+  slab(6.0, 0.5, 6.6, M.concrete, cx, 4.85, z);      // low ceiling — compression against the hall's height
+  // a quiet exhibit silhouette, lit by its own dim pool
+  slab(0.55, 1.25, 0.55, M.concreteDark, cx, 0.625, z, true, true);
+  const glow = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.4, 2.8),
+    new THREE.MeshBasicMaterial({ color: 0x1a212b })
+  );
+  glow.position.set(dir * (HALL.halfW + 6.55), 1.9, z);
+  glow.rotation.y = dir > 0 ? -Math.PI / 2 : Math.PI / 2;
+  world.add(glow);
+  // the pool itself — a soft downlight circle around the plinth
+  const pool = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.2, 3.2),
+    new THREE.MeshBasicMaterial({
+      map: haloChamberTex, color: 0x9fb0c6, transparent: true, opacity: 0.10,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    })
+  );
+  pool.rotation.x = -Math.PI / 2;
+  pool.position.set(cx, 0.012, z);
+  world.add(pool);
+}
+for (const z of OPENINGS.west) sideChamber('west', z);
+for (const z of OPENINGS.east) sideChamber('east', z);
+
+// cornices at the old ceiling line — they conceal the artwork fixtures above
+slab(HALL.halfW - ATRIUM.innerHalfW + 0.3, 0.5, LEN, M.plaster, -(ATRIUM.innerHalfW + (HALL.halfW - ATRIUM.innerHalfW + 0.3) / 2), HALL.height + 0.25, zMid);
+slab(HALL.halfW - ATRIUM.innerHalfW + 0.3, 0.5, LEN, M.plaster,  (ATRIUM.innerHalfW + (HALL.halfW - ATRIUM.innerHalfW + 0.3) / 2), HALL.height + 0.25, zMid);
+// clerestory walls — the void rises past the gallery band
+slab(0.4, ATRIUM.top - HALL.height, LEN, M.plaster, -ATRIUM.innerHalfW - 0.2, HALL.height + (ATRIUM.top - HALL.height) / 2, zMid);
+slab(0.4, ATRIUM.top - HALL.height, LEN, M.plaster,  ATRIUM.innerHalfW + 0.2, HALL.height + (ATRIUM.top - HALL.height) / 2, zMid);
+// upper ceiling leaves the continuous skylight ribbon (x ∈ [-1.5, 1.5])
+slab(ATRIUM.innerHalfW - 1.5, 0.5, LEN, M.plaster, -(1.5 + (ATRIUM.innerHalfW - 1.5) / 2), ATRIUM.top + 0.25, zMid);
+slab(ATRIUM.innerHalfW - 1.5, 0.5, LEN, M.plaster,  (1.5 + (ATRIUM.innerHalfW - 1.5) / 2), ATRIUM.top + 0.25, zMid);
 // glowing sky above the ribbon
 const sky = new THREE.Mesh(new THREE.PlaneGeometry(3, LEN), M.skylight);
 sky.rotation.x = Math.PI / 2;
-sky.position.set(0, HALL.height + 0.48, zMid);
+sky.position.set(0, ATRIUM.top + 0.48, zMid);
 world.add(sky);
 // thin aluminum mullions across the ribbon
 for (let z = HALL.zFar + 4; z < HALL.zNear; z += 4) {
-  slab(3, 0.06, 0.08, M.aluminum, 0, HALL.height + 0.1, z, false, false);
+  slab(3, 0.06, 0.08, M.aluminum, 0, ATRIUM.top + 0.1, z, false, false);
 }
+// bridges across the void — distant silhouettes against the skylight
+slab(2 * ATRIUM.innerHalfW, 0.18, 1.1, M.concreteDark, 0, 11.6, -2, true, true);
+slab(2 * ATRIUM.innerHalfW, 0.18, 1.1, M.concreteDark, 0, 13.4, -26, true, true);
+slab(2 * ATRIUM.innerHalfW, 0.18, 1.1, M.concreteDark, 0, 12.4, 18, true, true);
+// hidden cove light along the cornice edge — a fine luminous line
+const coveMat = new THREE.MeshBasicMaterial({
+  color: 0x4a5666, transparent: true, opacity: 0.3,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+});
+for (const x of [-ATRIUM.innerHalfW + 0.15, ATRIUM.innerHalfW - 0.15]) {
+  const cove = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, LEN), coveMat);
+  cove.position.set(x, HALL.height - 0.12, zMid);
+  world.add(cove);
+}
+
+// end walls — raw concrete at the threshold (rising the full atrium), and a
+// monumental portal at the entrance opening into a grand lobby beyond
+slab(2 * HALL.halfW + 1.2, ATRIUM.top + 0.5, 0.6, M.concrete, 0, (ATRIUM.top + 0.5) / 2, HALL.zFar - 0.3);
+// portal flanks + deep lintel (opening: x ∈ [-2.5, 2.5], y ∈ [0, 8])
+slab(HALL.halfW - 2.5 + 0.6, 8, 0.6, M.plaster, -(2.5 + (HALL.halfW - 2.5 + 0.6) / 2), 4, HALL.zNear + 0.3);
+slab(HALL.halfW - 2.5 + 0.6, 8, 0.6, M.plaster,  (2.5 + (HALL.halfW - 2.5 + 0.6) / 2), 4, HALL.zNear + 0.3);
+slab(2 * HALL.halfW + 1.2, ATRIUM.top + 0.5 - 8, 0.6, M.plaster, 0, 8 + (ATRIUM.top + 0.5 - 8) / 2, HALL.zNear + 0.3);
+// the lobby — vast, dim, its far wall split by a single tall blade of light
+slab(20, 0.4, 15.7, M.limestone, 0, -0.2, HALL.zNear + 8.45);
+slab(0.6, ATRIUM.top + 0.5, 15.7, M.concrete, -10.3, (ATRIUM.top + 0.5) / 2, HALL.zNear + 8.45);
+slab(0.6, ATRIUM.top + 0.5, 15.7, M.concrete,  10.3, (ATRIUM.top + 0.5) / 2, HALL.zNear + 8.45);
+slab(9.7, ATRIUM.top + 0.5, 0.6, M.concrete, -5.45, (ATRIUM.top + 0.5) / 2, HALL.zNear + 16.3);
+slab(9.7, ATRIUM.top + 0.5, 0.6, M.concrete,  5.45, (ATRIUM.top + 0.5) / 2, HALL.zNear + 16.3);
+slab(20, 0.5, 15.7, M.concrete, 0, ATRIUM.top + 0.75, HALL.zNear + 8.45);
+// monumental columns, read only in silhouette
+slab(0.9, ATRIUM.top + 0.5, 0.9, M.concreteDark, -5, (ATRIUM.top + 0.5) / 2, HALL.zNear + 8, true, true);
+slab(0.9, ATRIUM.top + 0.5, 0.9, M.concreteDark,  5, (ATRIUM.top + 0.5) / 2, HALL.zNear + 8, true, true);
+const lobbyBlade = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.2, 14),
+  new THREE.MeshBasicMaterial({ color: 0x39424e })
+);
+lobbyBlade.position.set(0, 7.6, HALL.zNear + 15.95);
+lobbyBlade.rotation.y = Math.PI;
+world.add(lobbyBlade);
 
 // concrete fins — rhythm and shadow along both walls
 for (let z = HALL.zFar + 10; z <= HALL.zNear - 10; z += 10) {
@@ -114,6 +253,60 @@ slab(0.045, 0.88, 0.045, M.brass,  2.55, 0.44, -38.6, false, true);
 // optional mid-hall graphite plinths / voids — do NOT change HALL clamps or SLOTS
 slab(1.1, 0.55, 1.1, M.concreteDark, -3.2, 0.275, -8, true, true);
 slab(0.9, 0.42, 0.9, M.concrete, 3.4, 0.21, 8, true, true);
+
+// soft grounding — contact shadows under furniture, ambient occlusion where wall meets floor
+function radialShadowTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 6, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+  grad.addColorStop(0.55, 'rgba(0,0,0,0.22)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+const contactTex = radialShadowTexture();
+function contactShadow(w, d, x, z) {
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, d),
+    new THREE.MeshBasicMaterial({ map: contactTex, transparent: true, depthWrite: false })
+  );
+  m.rotation.x = -Math.PI / 2;
+  m.position.set(x, 0.006, z);
+  m.renderOrder = 1;
+  world.add(m);
+}
+contactShadow(3.4, 1.2, 0, 4);
+contactShadow(3.4, 1.2, 0, -18);
+contactShadow(1.8, 1.8, -3.2, -8);
+contactShadow(1.5, 1.5, 3.4, 8);
+
+function aoGradientTexture() {
+  const c = document.createElement('canvas');
+  c.width = 8; c.height = 64;
+  const g = c.getContext('2d');
+  const grad = g.createLinearGradient(0, 64, 0, 0);
+  grad.addColorStop(0, 'rgba(0,0,0,0.42)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 8, 64);
+  return new THREE.CanvasTexture(c);
+}
+const aoTex = aoGradientTexture();
+const aoMat = new THREE.MeshBasicMaterial({ map: aoTex, transparent: true, depthWrite: false });
+for (const [x, ry] of [[-HALL.halfW + 0.015, Math.PI / 2], [HALL.halfW - 0.015, -Math.PI / 2]]) {
+  const ao = new THREE.Mesh(new THREE.PlaneGeometry(LEN, 0.55), aoMat);
+  ao.position.set(x, 0.275, zMid);
+  ao.rotation.y = ry;
+  world.add(ao);
+}
+{
+  const ao = new THREE.Mesh(new THREE.PlaneGeometry(2 * HALL.halfW, 0.55), aoMat);
+  ao.position.set(0, 0.275, HALL.zFar + 0.015);
+  world.add(ao);
+}
 
 /* ------------------------------------------------------------------ */
 /*  Light — cool-neutral silhouette hall; artwork is the lamp          */
@@ -168,8 +361,8 @@ const shaftMat = new THREE.MeshBasicMaterial({
 });
 const shafts = [];
 for (const z of [12, -2, -16, -30, -40]) {
-  const a = new THREE.Mesh(new THREE.PlaneGeometry(3.4, HALL.height), shaftMat);
-  a.position.set(0.4, HALL.height / 2, z);
+  const a = new THREE.Mesh(new THREE.PlaneGeometry(3.4, ATRIUM.top), shaftMat);
+  a.position.set(0.4, ATRIUM.top / 2, z);
   a.rotation.y = 0.25;
   a.userData.baseY = a.position.y;
   a.userData.phase = z * 0.07;
@@ -182,6 +375,42 @@ for (const z of [12, -2, -16, -30, -40]) {
   shafts.push(a, b);
 }
 
+// slow smoke — soft pools of haze drifting just above the floor
+function mistTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  for (let i = 0; i < 9; i++) {
+    const r = 50 + Math.random() * 75;
+    const grad = g.createRadialGradient(
+      40 + Math.random() * 176, 40 + Math.random() * 176, 0,
+      128, 128, r
+    );
+    grad.addColorStop(0, 'rgba(190,205,225,0.16)');
+    grad.addColorStop(1, 'rgba(190,205,225,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 256, 256);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const mists = [];
+if (!reduceMotion) {
+  const mistMat = new THREE.MeshBasicMaterial({
+    map: mistTexture(), transparent: true, opacity: 0.05,
+    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+  });
+  for (const [z, phase] of [[18, 0], [-8, 2.1], [-36, 4.4]]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(11, 7), mistMat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(0, 0.4 + phase * 0.05, z);
+    m.userData.phase = phase;
+    world.add(m);
+    mists.push(m);
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /*  Atmosphere — slow dust motes (off when prefers-reduced-motion)     */
 /* ------------------------------------------------------------------ */
@@ -192,7 +421,7 @@ if (!reduceMotion) {
   const positions = new Float32Array(COUNT * 3);
   for (let i = 0; i < COUNT; i++) {
     positions[i * 3] = (Math.random() - 0.5) * (2 * HALL.halfW - 1.2);
-    positions[i * 3 + 1] = 0.4 + Math.random() * (HALL.height - 1.2);
+    positions[i * 3 + 1] = 0.4 + Math.random() * (ATRIUM.top - 1.6); // motes rise the full height of the void
     positions[i * 3 + 2] = HALL.zFar + 2 + Math.random() * (LEN - 4);
   }
   const dustGeo = new THREE.BufferGeometry();
@@ -242,6 +471,24 @@ function linenTexture() {
 }
 const linen = linenTexture();
 
+// halo — the soft spill of light a picture lamp leaves on the wall.
+// it sits behind the frame and never touches the artwork's own pixels.
+function haloTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(128, 128, 20, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255,255,255,0.5)');
+  grad.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const haloTex = haloTexture();
+
 function labelTexture(data) {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 340;
@@ -277,6 +524,16 @@ function buildArtwork(slot, data, slotIndex = null) {
   let { w, h } = slot;
 
   const place = (texture) => {
+    // wall halo behind the frame — the work appears to light its own wall
+    const halo = new THREE.Mesh(
+      new THREE.PlaneGeometry(w + 1.7, h + 1.7),
+      new THREE.MeshBasicMaterial({
+        map: haloTex, color: 0xbcc7d8, transparent: true, opacity: 0.055,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      })
+    );
+    halo.position.z = -0.05;
+    group.add(halo);
     // frame — gunmetal with a thin titanium sightline
     const frame = new THREE.Mesh(new THREE.BoxGeometry(w + 0.16, h + 0.16, 0.085), M.oakDark);
     frame.castShadow = true;
@@ -309,6 +566,7 @@ function buildArtwork(slot, data, slotIndex = null) {
     );
     rim.position.z = 0.01;
     group.add(rim);
+    shadowDirty = true; // a newly hung work casts a new shadow — render the map once
     const entry = { mesh: art, group, data, center: group.position.clone(), normal, w, h, swingT: -1, rim, slotIndex };
     if (Number.isInteger(slotIndex)) artworks[slotIndex] = entry;
     else artworks.push(entry);
@@ -623,6 +881,15 @@ const bezier = (p0, p1, p2, t) => {
 let yaw = 0, pitch = 0;
 const move = { f: 0, b: 0, l: 0, r: 0 };
 const vel = new THREE.Vector3();
+let walkPhase = 0;
+
+// furniture the visitor walks around, not through
+const COLLIDERS = [
+  { x: 0, z: 4, hx: 1.3, hz: 0.28 },      // benches
+  { x: 0, z: -18, hx: 1.3, hz: 0.28 },
+  { x: -3.2, z: -8, hx: 0.55, hz: 0.55 }, // plinths
+  { x: 3.4, z: 8, hx: 0.45, hz: 0.45 },
+];
 
 let focus = null;           // { pos, look, art } — approaching one work
 let returnPose = null;
@@ -739,11 +1006,16 @@ function unfocus() {
   if (returnPose) { yawT = returnPose.yaw; pitchT = returnPose.pitch; }
 }
 
+let highlightSet = new Set();
 function setHighlights(indices) {
-  const set = new Set(indices || []);
+  highlightSet = new Set(indices || []);
+}
+// eased each frame: discovery highlight > hover breath > rest
+function updateRims(dt) {
   artworks.forEach((a, i) => {
     if (!a?.rim) return;
-    a.rim.material.opacity = set.size && set.has(i) ? 0.22 : 0;
+    const target = highlightSet.size && highlightSet.has(i) ? 0.22 : (hovered === a ? 0.09 : 0);
+    a.rim.material.opacity += (target - a.rim.material.opacity) * Math.min(1, dt * 5);
   });
 }
 
@@ -1026,7 +1298,10 @@ function tick() {
     // explore — softer look damping, more walk inertia
     yaw += (yawT - yaw) * Math.min(1, dt * 3.8);
     pitch += (pitchT - pitch) * Math.min(1, dt * 3.8);
-    camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+    // a living camera: barely-there sway, never a shake
+    const swayY = reduceMotion ? 0 : Math.sin(t * 0.62) * 0.0022;
+    const swayP = reduceMotion ? 0 : Math.sin(t * 0.47 + 1.4) * 0.0016;
+    camera.quaternion.setFromEuler(new THREE.Euler(pitch + swayP, yaw + swayY, 0, 'YXZ'));
 
     const dir = new THREE.Vector3();
     camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
@@ -1040,7 +1315,21 @@ function tick() {
     camera.position.addScaledVector(vel, dt);
     camera.position.x = THREE.MathUtils.clamp(camera.position.x, -HALL.halfW + 0.8, HALL.halfW - 0.8);
     camera.position.z = THREE.MathUtils.clamp(camera.position.z, HALL.zFar + 1.4, HALL.zNear - 1.4);
-    camera.position.y += (1.7 - camera.position.y) * Math.min(1, dt * 3);
+    // walk around the furniture — a gentle slide along its edge, no clipping
+    for (const c of COLLIDERS) {
+      const dx = camera.position.x - c.x, dz = camera.position.z - c.z;
+      const rx = c.hx + 0.45, rz = c.hz + 0.45;
+      if (Math.abs(dx) < rx && Math.abs(dz) < rz) {
+        const px = rx - Math.abs(dx), pz = rz - Math.abs(dz);
+        if (px < pz) camera.position.x += dx >= 0 ? px : -px;
+        else camera.position.z += dz >= 0 ? pz : -pz;
+      }
+    }
+    // footsteps carry a slight vertical rhythm, weighted by pace
+    const pace = vel.length();
+    walkPhase += dt * (1.6 + pace * 1.7);
+    const bob = reduceMotion ? 0 : Math.sin(walkPhase) * Math.min(0.02, pace * 0.007);
+    camera.position.y += (1.7 + bob - camera.position.y) * Math.min(1, dt * 3);
   }
 
   if (mode !== 'film') {
@@ -1063,11 +1352,21 @@ function tick() {
       dust.position.y = Math.sin(t * 0.07) * 0.12;
       dust.rotation.y = t * 0.008;
     }
+    for (const m of mists) {
+      m.position.x = Math.sin(t * 0.03 + m.userData.phase) * 1.6;
+      m.rotation.z = t * 0.006 + m.userData.phase;
+    }
   }
 
+  updateRims(dt);
   updateHand(dt, t);
   updateCursor(dt);
   updateGrain(dt);
+  // shadows re-render only while something that casts them is moving
+  if (shadowDirty || hand.position.y > -1.45 || (focus && focus.art.swingT >= 0)) {
+    renderer.shadowMap.needsUpdate = true;
+    shadowDirty = false;
+  }
   renderer.render(scene, camera);
 }
 
@@ -1097,6 +1396,7 @@ window.__exhibition = {
     const e = easeInOut(THREE.MathUtils.clamp((filmTime % DURATION) / DURATION, 0, 1));
     rail.getPoint(e, tmpPos); gaze.getPoint(e, tmpLook);
     camera.position.copy(tmpPos); camera.lookAt(tmpLook);
+    renderer.shadowMap.needsUpdate = true;
     renderer.render(scene, camera);
   },
 };
