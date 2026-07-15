@@ -1,5 +1,7 @@
 # Hand by Hand — A Virtual Exhibition
 
+**Live: https://0xjiongying.github.io/exhibition-virtual/**
+
 A cinematic, browser-based virtual art exhibition.
 Theme: **Humanity & Technology, Hand by Hand.**
 
@@ -27,6 +29,19 @@ Stage for hosts that expect `dist/`:
 ```sh
 npm run build
 ```
+
+## Deploy
+
+The live site is GitHub Pages, served from the `gh-pages` branch (the built `dist/` at its root, plus `.nojekyll`). To redeploy after changes land on `main`:
+
+```sh
+npm run build
+cd $(mktemp -d) && cp -r <repo>/dist/* . && touch .nojekyll
+git init -b gh-pages && git add -A && git commit -m "Deploy"
+git push -f https://github.com/0xjiongying/exhibition-virtual.git gh-pages
+```
+
+`render.yaml` remains as a blueprint if the site ever moves to Render (build `npm run build`, publish `dist`).
 
 ## Modes
 
