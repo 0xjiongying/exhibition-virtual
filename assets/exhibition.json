@@ -1,0 +1,34 @@
+{
+  "id": "hand-by-hand-v1",
+  "name": "Hand by Hand",
+  "subtitle": "Humanity & Technology · A Virtual Exhibition",
+  "creator": "Hand by Hand Exhibition",
+  "curator": "Hand by Hand Curatorial Desk",
+  "description": "A cinematic virtual museum experience built for the Monad hackathon vision: art at the center, technology invisible. The Exhibition NFT represents ownership of this exhibition experience, architecture, and metadata — never the third-party artworks on the walls.",
+  "theme": "Humanity & Technology, Hand by Hand",
+  "website": "https://0xjiongying.github.io/exhibition-virtual/",
+  "github": "https://github.com/0xjiongying/exhibition-virtual",
+  "version": "1.0.0-phase1",
+  "coverImage": "assets/cover/exhibition-cover.svg",
+  "chain": {
+    "name": "Monad",
+    "chainIdHex": "0x279F",
+    "chainIdNote": "Placeholder — replace with the official Monad chain id before deploy",
+    "rpcUrl": ""
+  },
+  "contracts": {
+    "ExhibitionRegistry": "",
+    "ExhibitionNFT": "",
+    "VisitorPassport": "",
+    "VisitorBadges": ""
+  },
+  "copyright": {
+    "notice": "Displayed works are shown with attribution for exhibition viewing only. They are not minted, sold, licensed, or otherwise tokenized by this platform. The Exhibition NFT covers creator-owned experience architecture and metadata only.",
+    "artworkPolicy": "never-tokenize-third-party-art",
+    "nftCovers": "creator-owned architecture, logo, or hero imagery only"
+  },
+  "visit": {
+    "explorerUniqueWorks": 5,
+    "firstVisitMinWorks": 1
+  }
+}

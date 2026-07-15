@@ -1,0 +1,22 @@
+{
+  "name": "Hand by Hand — Exhibition Experience",
+  "description": "ERC-721 ownership of the Hand by Hand virtual exhibition experience: architecture, curation metadata, and presentation design. This token does NOT represent ownership of any third-party artwork displayed inside the museum. Cover imagery is creator-owned architectural branding only.",
+  "image": "https://0xjiongying.github.io/exhibition-virtual/assets/cover/exhibition-cover.svg",
+  "external_url": "https://0xjiongying.github.io/exhibition-virtual/",
+  "background_color": "000000",
+  "attributes": [
+    { "trait_type": "Exhibition", "value": "Hand by Hand" },
+    { "trait_type": "Version", "value": "1.0.0-phase1" },
+    { "trait_type": "Tokenizes Artwork", "value": "No" },
+    { "trait_type": "Tokenizes Experience", "value": "Yes" },
+    { "trait_type": "Chain Target", "value": "Monad" },
+    { "trait_type": "Cover Type", "value": "Creator-owned architecture mark" }
+  ],
+  "properties": {
+    "exhibition_id": "hand-by-hand-v1",
+    "website": "https://0xjiongying.github.io/exhibition-virtual/",
+    "github": "https://github.com/0xjiongying/exhibition-virtual",
+    "copyright": "Third-party artworks are attributed for viewing only and are not tokenized by this NFT.",
+    "cover_source": "assets/cover/exhibition-cover.svg"
+  }
+}

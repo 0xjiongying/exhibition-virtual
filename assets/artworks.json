@@ -1,0 +1,90 @@
+[
+  {
+    "title": "Guardian of the Monad Peaks",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "A colossal winged guardian rests among violet peaks, lifting a Monad Verse sign above a turquoise valley.",
+    "src": "assets/art/featured-01.webp",
+    "tags": ["Landscape", "Community", "Hackathon", "Fantasy"]
+  },
+  {
+    "title": "Heroes Through the Rift",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "A cast of clawed, horned companions bursts from a blazing portal into deep space.",
+    "src": "assets/art/featured-06.webp",
+    "tags": ["Community", "Hackathon", "Fantasy"]
+  },
+  {
+    "title": "Companions in the Pack",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "Looking back over one shoulder: a striped beanie, a grinning pug, a blue-eyed kitten, and a sky full of sparks.",
+    "src": "assets/art/featured-07.png",
+    "tags": ["Portrait", "Community"]
+  },
+  {
+    "title": "Portrait of a Pirate Duck",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "A bearded duck pirate and his parrot, framed twice over — a painting of a painting.",
+    "src": "assets/art/featured-03.webp",
+    "tags": ["Portrait", "Community"]
+  },
+  {
+    "title": "Angel at the Frozen Gate",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "Wings spread on the ice, a haloed figure watches a diamond of light rise over the frozen sea.",
+    "src": "assets/art/featured-02.webp",
+    "tags": ["Landscape", "Fantasy"]
+  },
+  {
+    "title": "The Neon Offering",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "An open hand presents a glowing Monad seal while violet energy bends around the gift.",
+    "src": "assets/art/featured-08.png",
+    "tags": ["Hackathon", "Community", "Portrait"]
+  },
+  {
+    "title": "Hello, Emerald World",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "A green familiar greets a sunny pixel meadow — HELLO WORLD written across the sky.",
+    "src": "assets/art/featured-09.webp",
+    "tags": ["Landscape", "Hackathon", "Community"]
+  },
+  {
+    "title": "The Gathering at the Purple Altar",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "Hooded seals assemble as one of their own rises in a column of purple light.",
+    "src": "assets/art/featured-04.webp",
+    "tags": ["Community", "Fantasy"]
+  },
+  {
+    "title": "Pastel Pepe Valentine",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "A soft purple Pepe floats among hearts, glitter, and two patient pastel rabbits.",
+    "src": "assets/art/featured-10.webp",
+    "tags": ["Portrait", "Community"]
+  },
+  {
+    "title": "Pink Underglow",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "A cool companion leans on a classic lowrider — flame sleeves, chrome chain, neon on wet asphalt.",
+    "src": "assets/art/featured-11.png",
+    "tags": ["Portrait", "Community"]
+  },
+  {
+    "title": "A Feast Among Friends",
+    "artist": "Featured work — credit to come",
+    "year": "",
+    "description": "The hero wall. Hot pot, skewers, and three companions at the table — the museum borrows their warm light.",
+    "src": "assets/art/featured-05.webp",
+    "tags": ["Community", "Hackathon", "Portrait"]
+  }
+]

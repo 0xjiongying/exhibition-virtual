@@ -1,0 +1,50 @@
+{
+  "notes": [
+    {
+      "id": "exhibition-intent",
+      "topics": ["exhibition", "theme", "hand by hand", "purpose"],
+      "fact": "Hand by Hand is a cinematic virtual exhibition on the theme Humanity & Technology, Hand by Hand. Technology is meant to stay invisible; the artwork remains the center of attention."
+    },
+    {
+      "id": "nft-scope",
+      "topics": ["nft", "token", "ownership", "mint", "exhibition nft"],
+      "fact": "The Exhibition NFT represents ownership of the exhibition experience, architecture, and metadata. It does not tokenize, sell, or claim ownership of the third-party artworks displayed on the walls."
+    },
+    {
+      "id": "copyright-posture",
+      "topics": ["copyright", "attribution", "license", "rights"],
+      "fact": "Displayed works are shown with attribution for viewing inside this exhibition. Artwork files are never altered, cropped for display fitting only in-frame, or used as NFT cover art."
+    },
+    {
+      "id": "modes",
+      "topics": ["film", "explore", "sound", "modes", "how to visit"],
+      "fact": "The museum offers three modes: Film (a continuous cinematic take), Explore (walk and approach works), and Sound (optional room tone). Sound stays off until you enable it."
+    },
+    {
+      "id": "hero-wall",
+      "topics": ["hero", "threshold", "feast", "end of hall"],
+      "fact": "The hero wall sits at the far end of the hall (the threshold). In the current install it presents the work titled A Feast Among Friends; the hall borrows warm spill light from that installed artwork."
+    },
+    {
+      "id": "dark-museum",
+      "topics": ["dark", "lighting", "materials", "visual language", "v2"],
+      "fact": "Dark Museum V2 uses black and obsidian architecture with cool art-led lighting so each work reads as the luminous center of the room."
+    },
+    {
+      "id": "monad-hackathon",
+      "topics": ["monad", "hackathon", "chain", "registry"],
+      "fact": "Phase 1 includes deployable contract stubs for an Exhibition Registry, Exhibition NFT, Visitor Passport, and Visitor Badges intended for Monad-compatible EVM deployment. Addresses are empty until deploy."
+    },
+    {
+      "id": "passport-badges",
+      "topics": ["passport", "badge", "visit", "claim"],
+      "fact": "Visitor Passport tracks proof of visit. Badges such as First Visit and Explorer can be claimed once per address when eligibility from local visit proof is met. Without deployed contracts, claims run in clearly labeled demo mode."
+    },
+    {
+      "id": "artwork-pipeline",
+      "topics": ["install", "artworks.json", "pipeline", "curator"],
+      "fact": "Artworks are loaded from assets/artworks.json and files in assets/art/. They are fitted to wall slots at their own aspect ratio, rendered with toneMapped:false, and never pixel-edited by the exhibition software."
+    }
+  ],
+  "unknownReply": "I do not have that in the exhibition knowledge base. I can speak to installed wall labels, the exhibition identity, copyright posture, visit modes, and on-chain design notes that are documented here — nothing beyond those sources."
+}
