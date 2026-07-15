@@ -1,0 +1,12 @@
+{
+  "name": "hand-by-hand-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monad-compatible EVM contracts for Hand by Hand exhibition experience (not artwork tokenization).",
+  "scripts": {
+    "compile": "echo \"Install Foundry or Hardhat, then compile against OpenZeppelin. See README.md.\""
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}

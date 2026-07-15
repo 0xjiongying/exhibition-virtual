@@ -3,7 +3,8 @@
 // exact same files GitHub Pages serves from the repo root.
 import { cpSync, rmSync, mkdirSync, existsSync } from 'node:fs';
 
-const SITE = ['index.html', 'js', 'assets'];
+// Static museum site. contracts/ stays out of dist (Solidity is not browser content).
+const SITE = ['index.html', 'js', 'assets', 'metadata'];
 
 rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist', { recursive: true });

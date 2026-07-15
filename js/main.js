@@ -3,6 +3,7 @@
 
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { bootMuseumProduct } from './museum-boot.js';
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -267,7 +268,7 @@ function labelTexture(data) {
   return t;
 }
 
-function buildArtwork(slot, data) {
+function buildArtwork(slot, data, slotIndex = null) {
   const group = new THREE.Group();
   const hangY = slot.hero ? 3.1 : 2.35;
   group.position.set(slot.x, hangY, slot.z);
@@ -298,7 +299,19 @@ function buildArtwork(slot, data) {
     group.add(label);
 
     const normal = new THREE.Vector3(0, 0, 1).applyQuaternion(group.quaternion);
-    artworks.push({ mesh: art, group, data, center: group.position.clone(), normal, w, h, swingT: -1 });
+    if (slot.hero) data._hero = true;
+    // discovery highlight — cool rim behind the frame (off by default)
+    const rim = new THREE.Mesh(
+      new THREE.PlaneGeometry(w + 0.28, h + 0.28),
+      new THREE.MeshBasicMaterial({
+        color: 0xa8b4c4, transparent: true, opacity: 0, depthWrite: false, toneMapped: false,
+      })
+    );
+    rim.position.z = 0.01;
+    group.add(rim);
+    const entry = { mesh: art, group, data, center: group.position.clone(), normal, w, h, swingT: -1, rim, slotIndex };
+    if (Number.isInteger(slotIndex)) artworks[slotIndex] = entry;
+    else artworks.push(entry);
 
     // cool-neutral museum spotlight — artwork is the lamp.
     // (loaded artwork is unlit for color fidelity; the spot lights frame and wall,
@@ -354,7 +367,8 @@ fetch('assets/artworks.json')
   .then((r) => (r.ok ? r.json() : []))
   .catch(() => [])
   .then((list) => {
-    SLOTS.forEach((slot, i) => buildArtwork(slot, { ...FALLBACK, ...(list[i] || {}) }));
+    artworks.length = SLOTS.length;
+    SLOTS.forEach((slot, i) => buildArtwork(slot, { ...FALLBACK, ...(list[i] || {}) }, i));
   });
 
 /* ------------------------------------------------------------------ */
@@ -452,7 +466,7 @@ function callHand(art, gesture) {
 function dismissHand() { handAnchor = null; }
 
 const findArt = (x, z) =>
-  artworks.find((a) => Math.abs(a.center.x - x) < 0.5 && Math.abs(a.center.z - z) < 0.5);
+  artworks.find((a) => a && Math.abs(a.center.x - x) < 0.5 && Math.abs(a.center.z - z) < 0.5);
 
 let handBeat = null; // which film beat currently owns the hand
 function directHand(u) {
@@ -635,6 +649,7 @@ function setMode(next) {
   } else {
     hintEl.classList.remove('show');
   }
+  window.dispatchEvent(new CustomEvent('hbh:mode', { detail: { mode } }));
 }
 
 btnFilm.addEventListener('click', () => setMode('film'));
@@ -677,8 +692,9 @@ function pickArtwork(e) {
   ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
   camera.updateMatrixWorld();
   raycaster.setFromCamera(ndc, camera);
-  const hits = raycaster.intersectObjects(artworks.map((a) => a.mesh));
-  return hits.length ? artworks.find((a) => a.mesh === hits[0].object) : null;
+  const meshes = artworks.filter(Boolean).map((a) => a.mesh);
+  const hits = raycaster.intersectObjects(meshes);
+  return hits.length ? artworks.find((a) => a && a.mesh === hits[0].object) : null;
 }
 
 window.addEventListener('pointermove', (e) => {
@@ -687,11 +703,8 @@ window.addEventListener('pointermove', (e) => {
   body.classList.toggle('cursor-hot', !!hovered);
 });
 
-canvas.addEventListener('click', (e) => {
-  if (mode !== 'explore') return;
-  if (focus) { unfocus(); return; }
-  const art = pickArtwork(e);
-  if (!art) return;
+function approachArtwork(art) {
+  if (!art || mode !== 'explore') return;
   const dist = Math.max(art.w, art.h) * 1.25 + 0.8;
   returnPose = { pos: camera.position.clone(), yaw: yawT, pitch: pitchT };
   art.swingT = 0;        // the frame stirs as we come close
@@ -706,6 +719,16 @@ canvas.addEventListener('click', (e) => {
   plateEl.querySelector('.desc').textContent = art.data.description || '';
   plateEl.classList.add('show');
   body.classList.remove('cursor-hot');
+  const index = artworks.indexOf(art);
+  window.dispatchEvent(new CustomEvent('hbh:focus', { detail: { art, index } }));
+}
+
+canvas.addEventListener('click', (e) => {
+  if (mode !== 'explore') return;
+  if (focus) { unfocus(); return; }
+  const art = pickArtwork(e);
+  if (!art) return;
+  approachArtwork(art);
 });
 
 function unfocus() {
@@ -714,6 +737,14 @@ function unfocus() {
   dismissHand();
   plateEl.classList.remove('show');
   if (returnPose) { yawT = returnPose.yaw; pitchT = returnPose.pitch; }
+}
+
+function setHighlights(indices) {
+  const set = new Set(indices || []);
+  artworks.forEach((a, i) => {
+    if (!a?.rim) return;
+    a.rim.material.opacity = set.size && set.has(i) ? 0.22 : 0;
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -1054,6 +1085,13 @@ tick();
 window.__exhibition = {
   renderer, scene, camera, artworks, hand, callHand, dismissHand, updateHand,
   pick: (x, y) => pickArtwork({ clientX: x, clientY: y }),
+  approachArtwork(index) {
+    const art = artworks[index];
+    if (!art) return;
+    if (mode !== 'explore') setMode('explore');
+    approachArtwork(art);
+  },
+  setHighlights,
   seek(u) { filmTime = u * DURATION; },
   renderOnce() {
     const e = easeInOut(THREE.MathUtils.clamp((filmTime % DURATION) / DURATION, 0, 1));
@@ -1062,3 +1100,6 @@ window.__exhibition = {
     renderer.render(scene, camera);
   },
 };
+
+// Phase 1 museum product layer (wallet / passport / curator / discovery)
+bootMuseumProduct(window.__exhibition);

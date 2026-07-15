@@ -1,0 +1,46 @@
+{
+  "badges": [
+    {
+      "id": 1,
+      "key": "first-visit",
+      "name": "First Visit",
+      "description": "You entered Explore and approached at least one work.",
+      "requires": { "uniqueWorks": 1 }
+    },
+    {
+      "id": 2,
+      "key": "explorer",
+      "name": "Explorer",
+      "description": "You approached five distinct works in this exhibition.",
+      "requires": { "uniqueWorks": 5 }
+    },
+    {
+      "id": 3,
+      "key": "museum-patron",
+      "name": "Museum Patron",
+      "description": "You stood with the hero work at the threshold.",
+      "requires": { "heroFocus": true }
+    },
+    {
+      "id": 4,
+      "key": "early-supporter",
+      "name": "Early Supporter",
+      "description": "You connected a wallet during the Phase 1 demo.",
+      "requires": { "walletConnected": true }
+    },
+    {
+      "id": 5,
+      "key": "hackathon-demo",
+      "name": "Hackathon Demo",
+      "description": "You claimed the Monad hackathon demonstration badge.",
+      "requires": { "always": true }
+    },
+    {
+      "id": 6,
+      "key": "completion",
+      "name": "Proof of Completion",
+      "description": "Explorer path complete: five works plus the hero threshold.",
+      "requires": { "uniqueWorks": 5, "heroFocus": true }
+    }
+  ]
+}

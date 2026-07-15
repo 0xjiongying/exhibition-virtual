@@ -133,6 +133,111 @@
       transition-duration: .2s !important;
     }
   }
+
+  /* ---------- Phase 1 product layer — smoked glass, museum-calm ---------- */
+  #productControls {
+    position: fixed; right: 42px; bottom: 84px; z-index: 9;
+    display: flex; gap: 6px; pointer-events: auto;
+  }
+  #productControls .mp-btn,
+  #controls button,
+  .mp-panel button,
+  .mp-panel input,
+  .mp-footer {
+    cursor: pointer;
+  }
+  .mp-btn {
+    font: inherit; font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    padding: 9px 14px; border: 1px solid var(--hairline); border-radius: 2px;
+    background: var(--glass); color: rgba(242,242,240,.82);
+    backdrop-filter: blur(12px); transition: background .35s, color .35s, border-color .35s;
+  }
+  .mp-btn:hover { border-color: rgba(242,242,240,.32); color: var(--ink); }
+  .mp-btn.active, .mp-chips button.active {
+    background: var(--glass-strong); color: var(--ink);
+    border-color: rgba(242,242,240,.38);
+  }
+  .mp-btn:disabled { opacity: .45; cursor: default; }
+  .mp-btn-inline { letter-spacing: .12em; padding: 7px 12px; font-size: 10px; }
+
+  .mp-footer {
+    position: fixed; left: 42px; bottom: 14px; z-index: 8;
+    max-width: min(52ch, 46vw); font-size: 10px; letter-spacing: .06em;
+    line-height: 1.45; color: rgba(242,242,240,.38); pointer-events: none;
+  }
+
+  .mp-panel {
+    position: fixed; top: 96px; right: 42px; z-index: 12;
+    width: min(360px, calc(100vw - 48px)); max-height: calc(100vh - 160px);
+    overflow: auto; padding: 22px 22px 18px;
+    background: var(--glass-strong); border: 1px solid var(--hairline);
+    backdrop-filter: blur(18px); color: var(--ink);
+    pointer-events: auto; cursor: default;
+  }
+  .mp-panel[hidden] { display: none !important; }
+  .mp-panel-h {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 12px;
+  }
+  .mp-panel-h h3 {
+    font-size: 12px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase;
+  }
+  .mp-close {
+    font: inherit; font-size: 18px; line-height: 1; border: 0; background: transparent;
+    color: var(--muted); padding: 0 4px;
+  }
+  .mp-muted { color: var(--muted); font-size: 12px; line-height: 1.55; }
+  .mp-body { font-size: 13px; line-height: 1.55; color: rgba(242,242,240,.78); margin-top: 4px; }
+  .mp-fine { margin-top: 16px; font-size: 11px; line-height: 1.5; color: rgba(242,242,240,.4); }
+  .mp-block { margin-top: 18px; }
+  .mp-block h4 {
+    font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted);
+  }
+  .mp-pill {
+    display: inline-block; margin-left: 6px; padding: 1px 6px;
+    border: 1px solid var(--hairline); font-size: 9px; letter-spacing: .14em;
+  }
+  .mp-list { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+  .mp-badge {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    padding-top: 10px; border-top: 1px solid rgba(242,242,240,.08);
+  }
+  .mp-badge strong { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .mp-badge .mp-muted { font-size: 11px; }
+  .mp-log {
+    margin: 14px 0; max-height: 220px; overflow: auto;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .mp-msg p { font-size: 13.5px; line-height: 1.6; color: rgba(242,242,240,.84); }
+  .mp-msg.mp-user p { color: var(--muted); }
+  .mp-msg small { display: block; margin-top: 6px; font-size: 10px; letter-spacing: .08em; }
+  .mp-form { display: flex; gap: 8px; margin-top: 8px; }
+  .mp-form input, .mp-search {
+    flex: 1; font: inherit; font-size: 13px; color: var(--ink);
+    background: rgba(0,0,0,.35); border: 1px solid var(--hairline);
+    padding: 10px 12px; border-radius: 2px; outline: none;
+  }
+  .mp-search { width: 100%; margin: 12px 0 8px; }
+  .mp-form input:focus, .mp-search:focus { border-color: rgba(242,242,240,.35); }
+  .mp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .mp-chips button {
+    font: inherit; font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    padding: 6px 10px; border: 1px solid var(--hairline); border-radius: 2px;
+    background: transparent; color: rgba(242,242,240,.7);
+  }
+  .mp-chips button:hover { color: var(--ink); border-color: rgba(242,242,240,.3); }
+  .mp-navlist button.mp-link {
+    display: block; width: 100%; text-align: left; border: 0; background: transparent;
+    color: inherit; padding: 8px 0; border-top: 1px solid rgba(242,242,240,.08);
+  }
+  .mp-navlist strong { display: block; font-size: 13px; font-weight: 600; }
+  .mp-navlist .mp-muted { font-size: 11px; }
+
+  @media (max-width: 720px) {
+    #productControls { right: 16px; bottom: 78px; flex-wrap: wrap; justify-content: flex-end; max-width: 70vw; }
+    .mp-panel { right: 16px; top: 72px; }
+    .mp-footer { left: 16px; max-width: 90vw; bottom: 10px; font-size: 9px; }
+  }
 </style>
 </head>
 <body class="cinema cursor-idle">
