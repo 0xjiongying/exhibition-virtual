@@ -1,7 +1,7 @@
 {
   "name": "Hand by Hand — Exhibition Experience",
   "description": "ERC-721 ownership of the Hand by Hand virtual exhibition experience: architecture, curation metadata, and presentation design. This token does NOT represent ownership of any third-party artwork displayed inside the museum. Cover imagery is creator-owned architectural branding only.",
-  "image": "ipfs://REPLACE_WITH_CREATOR_OWNED_COVER_CID_OR_HTTPS_URL",
+  "image": "https://0xjiongying.github.io/exhibition-virtual/assets/cover/exhibition-cover.svg",
   "external_url": "https://0xjiongying.github.io/exhibition-virtual/",
   "background_color": "000000",
   "attributes": [
