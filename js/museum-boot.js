@@ -1,12 +1,12 @@
 // Boots the Phase 1 museum product layer without replacing the film/explore loop.
 
-import { mountMuseumChrome, togglePanel, closePanels, renderPassport, renderSession, appendCurator, renderDiscoverList, renderDiscoverChips } from './museum-ui.js';
+import { mountMuseumChrome, togglePanel, closePanels, renderPassport, renderSession, appendCurator, renderDiscoverList, renderDiscoverChips, showPassportNote } from './museum-ui.js';
 import { connectWallet, disconnectWallet, getWalletState, onWalletChange } from './wallet.js';
 import { getVisitState, markExploreEntered, recordArtworkFocus } from './visit.js';
 import { getPassportView, claimBadge } from './passport.js';
 import { buildKnowledgeBase, askCurator } from './curator-ai.js';
 import { applyDiscovery, clearDiscovery, discoveryTagsFrom } from './discovery.js';
-import { startSession, trackMode, trackArtworkView, markCompletion, getSessionMetrics, exportSessionJson } from './analytics.js';
+import { startSession, trackMode, trackArtworkView, markCompletion, getSessionMetrics, exportSessionJson, archiveSession } from './analytics.js';
 
 async function loadJson(url, fallback) {
   try {
@@ -120,8 +120,9 @@ export async function bootMuseumProduct(api) {
     refreshPassport(badges);
     if (result.ok) {
       btn.textContent = result.mode === 'demo' ? 'Demo claimed' : 'Claimed';
+      if (result.message) showPassportNote(result.message);
     } else {
-      alert(result.error || 'Could not claim.');
+      showPassportNote(result.error || 'Could not claim.');
     }
   });
 
@@ -189,6 +190,10 @@ export async function bootMuseumProduct(api) {
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Escape') closePanels();
   });
+
+  // close the session so history accumulates across visits (pagehide covers
+  // tab close, navigation, and bfcache — beforeunload alone misses mobile)
+  window.addEventListener('pagehide', () => archiveSession());
 
   // Gentle intro line once
   appendCurator(

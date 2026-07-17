@@ -4,7 +4,8 @@
 import { cpSync, rmSync, mkdirSync, existsSync } from 'node:fs';
 
 // Static museum site. contracts/ stays out of dist (Solidity is not browser content).
-const SITE = ['index.html', 'js', 'assets', 'metadata'];
+// vendor/ holds the pinned Three.js runtime (copied from node_modules — see package.json).
+const SITE = ['index.html', 'js', 'assets', 'metadata', 'vendor'];
 
 rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist', { recursive: true });

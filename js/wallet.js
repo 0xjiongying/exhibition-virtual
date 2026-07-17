@@ -18,6 +18,26 @@ export function onWalletChange(fn) {
   return () => listeners.delete(fn);
 }
 
+// Keep app state honest when the user switches accounts or chains in the
+// wallet UI — a persisted address must never outlive the provider's truth.
+function subscribeProvider() {
+  const eth = window.ethereum;
+  if (!eth?.on || eth.__hbhSubscribed) return;
+  eth.__hbhSubscribed = true;
+  eth.on('accountsChanged', (accounts) => {
+    const next = (accounts && accounts[0]) || '';
+    const stored = localStorage.getItem(STORAGE_KEY) || '';
+    if (!stored) return; // never connected in this app — nothing to reconcile
+    if (next) localStorage.setItem(STORAGE_KEY, next);
+    else localStorage.removeItem(STORAGE_KEY);
+    notify(getWalletState());
+  });
+  eth.on('chainChanged', () => notify(getWalletState()));
+}
+subscribeProvider();
+// some wallets inject after page load
+window.addEventListener?.('ethereum#initialized', subscribeProvider, { once: true });
+
 export function getWalletState() {
   const address = localStorage.getItem(STORAGE_KEY) || '';
   return {
@@ -94,7 +114,8 @@ export function encodeClaim(badgeId) {
 /** Encode recordVisit(bytes32,bool) — selector verified via keccak256("recordVisit(bytes32,bool)"). */
 export function encodeRecordVisit(exhibitionIdBytes32, completed) {
   const sel = '58b112ed';
-  const id = String(exhibitionIdBytes32).replace(/^0x/, '').padStart(64, '0');
+  // bytes32 is left-aligned: short values pad on the RIGHT (unlike uint256)
+  const id = String(exhibitionIdBytes32).replace(/^0x/, '').padEnd(64, '0').slice(0, 64);
   const flag = completed ? '1'.padStart(64, '0') : '0'.padStart(64, '0');
   return `0x${sel}${id}${flag}`;
 }

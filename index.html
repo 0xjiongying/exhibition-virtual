@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'" />
 <title>Hand by Hand — A Virtual Exhibition</title>
+<meta name="description" content="A cinematic virtual museum for the Monad ecosystem. Walk a monumental dark gallery, meet the AI curator, earn visitor badges — art at the center, technology invisible." />
+<meta name="theme-color" content="#000000" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Hand by Hand — A Virtual Exhibition" />
+<meta property="og:description" content="A cinematic virtual museum for the Monad ecosystem. Art at the center, technology invisible." />
+<meta property="og:url" content="https://0xjiongying.github.io/exhibition-virtual/" />
+<meta property="og:image" content="https://0xjiongying.github.io/exhibition-virtual/assets/cover/exhibition-cover.svg" />
+<meta name="twitter:card" content="summary_large_image" />
 <style>
   :root {
     --ink: #f2f2f0;
@@ -133,6 +143,14 @@
     .bar, #fade, #wordmark, #caption, #plate, #controls, #hint, #cursor, #cursorRing {
       transition-duration: .2s !important;
     }
+    .mp-panel:not([hidden]) { animation: none !important; }
+    .mp-btn, #controls button { transition-duration: .1s !important; transform: none !important; }
+  }
+
+  /* keyboard users get a clear, on-brand focus ring */
+  :focus-visible {
+    outline: 2px solid rgba(242, 242, 240, .65);
+    outline-offset: 2px;
   }
 
   /* ---------- Phase 1 product layer — smoked glass, museum-calm ---------- */
@@ -292,11 +310,12 @@
   <div id="cursorRing"></div>
   <div id="cursor"></div>
 
+  <!-- Three.js is vendored (pinned via package.json) — no runtime CDN dependency. -->
   <script type="importmap">
   {
     "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      "three": "./vendor/three.module.min.js",
+      "three/addons/": "./vendor/addons/"
     }
   }
   </script>

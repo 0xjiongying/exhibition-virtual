@@ -7,5 +7,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "start": "npx --yes http-server -p 8173 -c-1 ."
+  },
+  "devDependencies": {
+    "three": "0.160.0"
   }
 }

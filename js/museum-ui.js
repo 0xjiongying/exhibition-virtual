@@ -15,7 +15,7 @@ export function mountMuseumChrome() {
       <span>Works on view are attributed for exhibition viewing only — they are not tokenized.</span>
     </footer>
 
-    <aside id="panelPassport" class="mp-panel" hidden>
+    <aside id="panelPassport" class="mp-panel" role="dialog" aria-label="Visitor passport" hidden>
       <header class="mp-panel-h">
         <h3>Visitor Passport</h3>
         <button type="button" class="mp-close" data-close="panelPassport" aria-label="Close">×</button>
@@ -34,16 +34,16 @@ export function mountMuseumChrome() {
         <p id="sessionReadout" class="mp-body">—</p>
         <button type="button" id="btnExportSession" class="mp-btn mp-btn-inline">Export JSON</button>
       </div>
-      <p class="mp-fine" id="passportNote">Demo mode stores claims on this device until contracts are deployed on Monad.</p>
+      <p class="mp-fine" id="passportNote" aria-live="polite">Demo mode stores claims on this device until contracts are deployed on Monad.</p>
     </aside>
 
-    <aside id="panelCurator" class="mp-panel" hidden>
+    <aside id="panelCurator" class="mp-panel" role="dialog" aria-label="AI curator" hidden>
       <header class="mp-panel-h">
         <h3>AI Curator</h3>
         <button type="button" class="mp-close" data-close="panelCurator" aria-label="Close">×</button>
       </header>
       <p class="mp-muted">Answers only from exhibition records. If it is not documented, the curator will say so.</p>
-      <div id="curatorLog" class="mp-log"></div>
+      <div id="curatorLog" class="mp-log" aria-live="polite"></div>
       <form id="curatorForm" class="mp-form">
         <input id="curatorInput" type="text" autocomplete="off" placeholder="Ask about a work, the theme, or copyright…" />
         <button type="submit" class="mp-btn mp-btn-inline">Ask</button>
@@ -56,7 +56,7 @@ export function mountMuseumChrome() {
       </div>
     </aside>
 
-    <aside id="panelDiscover" class="mp-panel" hidden>
+    <aside id="panelDiscover" class="mp-panel" role="dialog" aria-label="Discover artworks" hidden>
       <header class="mp-panel-h">
         <h3>Discover</h3>
         <button type="button" class="mp-close" data-close="panelDiscover" aria-label="Close">×</button>
@@ -148,15 +148,28 @@ export function renderPassport(view) {
       : b.eligible
         ? 'Ready'
         : 'Locked';
+    // badge catalog is data, not markup — escape everything, constrain the key
+    const safeKey = String(b.key || '').replace(/[^\w-]/g, '');
     li.innerHTML = `
       <div>
-        <strong>${b.name}</strong>
-        <span class="mp-muted">${b.description}</span>
+        <strong>${escapeHtml(b.name)}</strong>
+        <span class="mp-muted">${escapeHtml(b.description)}</span>
       </div>
-      <button type="button" class="mp-btn mp-btn-inline" data-claim="${b.key}" ${b.claimed || !b.eligible ? 'disabled' : ''}>${status}</button>
+      <button type="button" class="mp-btn mp-btn-inline" data-claim="${safeKey}" ${b.claimed || !b.eligible ? 'disabled' : ''}>${status}</button>
     `;
     list.appendChild(li);
   }
+}
+
+// quiet inline feedback in the passport panel — never a blocking dialog
+let noteTimer = null;
+export function showPassportNote(message) {
+  const el = document.getElementById('passportNote');
+  if (!el) return;
+  if (!el.dataset.defaultText) el.dataset.defaultText = el.textContent;
+  el.textContent = message;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => { el.textContent = el.dataset.defaultText; }, 6000);
 }
 
 export function renderSession(metrics) {
