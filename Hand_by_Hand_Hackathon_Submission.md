@@ -40,7 +40,7 @@ Hand by Hand solves this with a strict separation between **presentation** and *
   - `VisitorPassport` — lean per-wallet visit records.
 - **Graceful demo mode** — with contract addresses unset, wallet connect, badge claims, and visit proofs run entirely client-side and are labeled *Demo claimed*; the moment real addresses are dropped into `assets/exhibition.json`, the same UI paths attempt real `claim` / `recordVisit` transactions via raw `eth_sendTransaction` calldata (no heavy SDK dependency).
 - **Grounded AI curator** — retrieval-only Q&A over `artworks.json`, `exhibition.json`, and `curator-notes.json`; it scores and returns only facts already in those files and gives an explicit "I do not have that" reply rather than inventing information about the art.
-- **Production hardening already shipped** — vendored Three.js (no runtime CDN dependency), an XSS fix, reactive wallet state (`accountsChanged` / `chainChanged` listeners keep local state honest instead of trusting stale storage), a Content-Security-Policy, and accessibility passes — this is built past demo-only code quality, not stopped at "it works once."
+- **Production hardening already shipped** — vendored Three.js (no runtime CDN dependency), an XSS fix, reactive wallet state (`accountsChanged` / `chainChanged` listeners keep local state honest instead of trusting stale storage), a Content-Security-Policy, accessibility passes, and a footer **Disclaimer** panel (plain-language notices for this independent hackathon / testnet demo) — this is built past demo-only code quality, not stopped at "it works once."
 
 ---
 
@@ -62,22 +62,21 @@ Hand by Hand solves this with a strict separation between **presentation** and *
 
 ## 7. Category (Mainnet/Testnet)
 
-**Testnet** — recommended, pending action.
+**Testnet**
 
-The contracts (`ExhibitionNFT`, `ExhibitionRegistry`, `VisitorBadges`, `VisitorPassport`) are written, OpenZeppelin-based, and documented for deployment, but `assets/exhibition.json` currently ships with **empty contract addresses and a placeholder chain id** (`0x279F`, explicitly commented as "replace with the official Monad chain id before deploy"). No deployment has happened yet. Testnet is the correct category once deployed — do not submit as Mainnet. See item 8 below; this is the single highest-priority gap before submission.
+Chain config in `assets/exhibition.json` is already set to **Monad Testnet** (chain id `10143` / `0x279F`, RPC `https://testnet-rpc.monad.xyz`, explorer `https://testnet.monadvision.com`). Wallet connect switches or adds that network. Contracts are written and documented but **not deployed yet** — submit under Testnet, not Mainnet. See item 8 below; deploy is still the highest-priority gap before submission.
 
 ---
 
 ## 8. Smart Contract Address
 
-**⚠ Missing — required before submission.** No contracts are deployed yet. `contracts/README.md` already documents the exact sequence:
+**⚠ Missing — required before submission.** No contracts are deployed yet. Chain id + RPC are already configured; remaining deploy sequence from `contracts/README.md`:
 
-1. Confirm the official Monad testnet chain id and RPC; replace the placeholder in `assets/exhibition.json` → `chain.chainIdHex`.
-2. Deploy in order: `ExhibitionNFT` → `ExhibitionRegistry` → `VisitorPassport` → `VisitorBadges` (Foundry or Hardhat against `node_modules/@openzeppelin/contracts`).
-3. Mint the exhibition NFT with a metadata URI pointing at a **creator-owned** cover (fill `image` in `metadata/exhibition-nft.json`; never point it at `featured-*` third-party art).
-4. Call `registerExhibition` on `ExhibitionRegistry` with the minted `nftId`.
-5. Enable badge claims on `VisitorBadges` via `setClaimEnabled`.
-6. Paste all four deployed addresses into `assets/exhibition.json` → `contracts.*` so the front end exits demo mode automatically.
+1. Deploy in order: `ExhibitionNFT` → `ExhibitionRegistry` → `VisitorPassport` → `VisitorBadges` (Foundry or Hardhat against `node_modules/@openzeppelin/contracts`).
+2. Mint the exhibition NFT with a metadata URI pointing at a **creator-owned** cover (fill `image` in `metadata/exhibition-nft.json`; never point it at `featured-*` third-party art).
+3. Call `registerExhibition` on `ExhibitionRegistry` with the minted `nftId`.
+4. Enable badge claims on `VisitorBadges` via `setClaimEnabled`.
+5. Paste all four deployed addresses into `assets/exhibition.json` → `contracts.*` so the front end exits demo mode automatically.
 
 Once deployed, list the **`ExhibitionNFT`** contract address here (this is the token judges will most likely check on an explorer), and optionally list the other three in the write-up body if the form allows multiple addresses.
 
@@ -103,4 +102,6 @@ Reviewing this as a hackathon judge scoring on innovation, technical execution, 
 
 **Gaps that will cost points if unresolved.** Three fields in this form are currently unfillable: no deployed contract address, no demo video, no social post. Judges scoring on "completeness" or "live on testnet" will mark this down hard if the submission goes in with those blank — this is the single biggest risk to the submission, bigger than any code issue. `VisitorBadges.claim` is also open-claim by design once enabled (noted candidly in your own `contracts/README.md` as needing a verifier or merkle gate before mainnet) — call this out proactively in the write-up as a known Phase 1 tradeoff rather than letting a judge discover it and read it as an oversight.
 
-**Recommended before you submit, in priority order:** (1) deploy the four contracts to Monad testnet and paste the addresses into `exhibition.json` — this alone flips three form fields from missing to filled and lets judges actually click into a live token; (2) record the 60–90s demo video using the shot list above; (3) publish one social post with the live link. None of these require new features — the product is already built to demonstrate all of them.
+**Done since the first draft of this form:** Monad Testnet chain config + wallet add/switch, footer Disclaimer panel, submission draft checked into the repo.
+
+**Still required before you submit, in priority order:** (1) deploy the four contracts to Monad testnet and paste the addresses into `exhibition.json` — this alone flips the contract-address field from missing to filled and lets judges click into a live token; (2) record the 60–90s demo video using the shot list above; (3) publish one social post with the live link. None of these require new product features — the app is already built to demonstrate them.
