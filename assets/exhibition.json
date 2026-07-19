@@ -11,10 +11,16 @@
   "version": "1.0.0-phase1",
   "coverImage": "assets/cover/exhibition-cover.svg",
   "chain": {
-    "name": "Monad",
+    "name": "Monad Testnet",
+    "chainId": 10143,
     "chainIdHex": "0x279F",
-    "chainIdNote": "Placeholder — replace with the official Monad chain id before deploy",
-    "rpcUrl": ""
+    "rpcUrl": "https://testnet-rpc.monad.xyz",
+    "explorerUrl": "https://testnet.monadvision.com",
+    "nativeCurrency": {
+      "name": "MON",
+      "symbol": "MON",
+      "decimals": 18
+    }
   },
   "contracts": {
     "ExhibitionRegistry": "",
@@ -26,6 +32,14 @@
     "notice": "Displayed works are shown with attribution for exhibition viewing only. They are not minted, sold, licensed, or otherwise tokenized by this platform. The Exhibition NFT covers creator-owned experience architecture and metadata only.",
     "artworkPolicy": "never-tokenize-third-party-art",
     "nftCovers": "creator-owned architecture, logo, or hero imagery only"
+  },
+  "disclaimer": {
+    "hackathon": true,
+    "openSource": true,
+    "portfolio": false,
+    "externalServices": true,
+    "testnet": true,
+    "mainnet": false
   },
   "visit": {
     "explorerUniqueWorks": 5,

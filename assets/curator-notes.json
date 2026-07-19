@@ -16,6 +16,11 @@
       "fact": "Displayed works are shown with attribution for viewing inside this exhibition. Artwork files are never altered, cropped for display fitting only in-frame, or used as NFT cover art."
     },
     {
+      "id": "disclaimer",
+      "topics": ["disclaimer", "legal", "affiliation", "dyor", "testnet", "risks", "advice"],
+      "fact": "A plain-language Disclaimer is available from the footer link. It explains that this is an independent educational hackathon demonstration on Monad Testnet, is not official advice, is not affiliated with referenced trademarks unless stated, and asks visitors to do their own research. Open it from the Disclaimer control in the footer."
+    },
+    {
       "id": "modes",
       "topics": ["film", "explore", "sound", "modes", "how to visit"],
       "fact": "The museum offers three modes: Film (a continuous cinematic take), Explore (walk and approach works), and Sound (optional room tone). Sound stays off until you enable it."
@@ -33,7 +38,7 @@
     {
       "id": "monad-hackathon",
       "topics": ["monad", "hackathon", "chain", "registry"],
-      "fact": "Phase 1 includes deployable contract stubs for an Exhibition Registry, Exhibition NFT, Visitor Passport, and Visitor Badges intended for Monad-compatible EVM deployment. Addresses are empty until deploy."
+      "fact": "Phase 1 includes deployable contract stubs for an Exhibition Registry, Exhibition NFT, Visitor Passport, and Visitor Badges intended for Monad Testnet deployment. Addresses are empty until deploy."
     },
     {
       "id": "passport-badges",
@@ -46,5 +51,5 @@
       "fact": "Artworks are loaded from assets/artworks.json and files in assets/art/. They are fitted to wall slots at their own aspect ratio, rendered with toneMapped:false, and never pixel-edited by the exhibition software."
     }
   ],
-  "unknownReply": "I do not have that in the exhibition knowledge base. I can speak to installed wall labels, the exhibition identity, copyright posture, visit modes, and on-chain design notes that are documented here — nothing beyond those sources."
+  "unknownReply": "I do not have that in the exhibition knowledge base. I can speak to installed wall labels, the exhibition identity, copyright posture, the footer Disclaimer, visit modes, and on-chain design notes that are documented here — nothing beyond those sources."
 }

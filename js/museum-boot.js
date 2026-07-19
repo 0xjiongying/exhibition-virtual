@@ -1,6 +1,7 @@
 // Boots the Phase 1 museum product layer without replacing the film/explore loop.
 
 import { mountMuseumChrome, togglePanel, closePanels, renderPassport, renderSession, appendCurator, renderDiscoverList, renderDiscoverChips, showPassportNote } from './museum-ui.js';
+import { populateDisclaimer } from './disclaimer.js';
 import { connectWallet, disconnectWallet, getWalletState, onWalletChange } from './wallet.js';
 import { getVisitState, markExploreEntered, recordArtworkFocus } from './visit.js';
 import { getPassportView, claimBadge } from './passport.js';
@@ -50,11 +51,12 @@ export async function bootMuseumProduct(api) {
   refreshWalletButton();
   refreshPassport(badges);
 
-  // Copyright line from exhibition.json when present
-  const foot = document.getElementById('copyrightPlate');
-  if (foot && exhibition.copyright?.notice) {
-    foot.querySelector('span').textContent = exhibition.copyright.notice;
+  // Copyright line + disclaimer panel from exhibition.json when present
+  const notice = document.getElementById('copyrightNotice');
+  if (notice && exhibition.copyright?.notice) {
+    notice.textContent = exhibition.copyright.notice;
   }
+  populateDisclaimer(exhibition);
 
   const tags = discoveryTagsFrom(artworksRaw);
   let activeTag = '';
@@ -102,11 +104,31 @@ export async function bootMuseumProduct(api) {
     togglePanel('panelDiscover');
   });
 
+  function syncDisclaimerTrigger() {
+    const panel = document.getElementById('panelDisclaimer');
+    const btn = document.getElementById('btnDisclaimer');
+    if (!btn) return;
+    btn.setAttribute('aria-expanded', panel && !panel.hidden ? 'true' : 'false');
+  }
+
+  document.getElementById('btnDisclaimer')?.addEventListener('click', () => {
+    populateDisclaimer(exhibition);
+    togglePanel('panelDisclaimer');
+    syncDisclaimerTrigger();
+    if (!document.getElementById('panelDisclaimer')?.hidden) {
+      document.querySelector('#panelDisclaimer .mp-close')?.focus();
+    }
+  });
+
   document.querySelectorAll('[data-close]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-close');
       const panel = document.getElementById(id);
       if (panel) panel.hidden = true;
+      if (id === 'panelDisclaimer') {
+        syncDisclaimerTrigger();
+        document.getElementById('btnDisclaimer')?.focus();
+      }
     });
   });
 
@@ -188,7 +210,11 @@ export async function bootMuseumProduct(api) {
   });
 
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'Escape') closePanels();
+    if (e.code !== 'Escape') return;
+    const disclaimerOpen = document.getElementById('panelDisclaimer') && !document.getElementById('panelDisclaimer').hidden;
+    closePanels();
+    syncDisclaimerTrigger();
+    if (disclaimerOpen) document.getElementById('btnDisclaimer')?.focus();
   });
 
   // close the session so history accumulates across visits (pagehide covers

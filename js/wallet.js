@@ -83,8 +83,30 @@ async function maybeSwitchChain(chainConfig) {
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: chainIdHex }],
     });
-  } catch {
-    // Placeholder chain id may not exist yet — soft-fail for Phase 1.
+  } catch (err) {
+    // 4902: chain not added yet — prompt wallet to add Monad Testnet.
+    if (err?.code === 4902 || err?.data?.originalError?.code === 4902) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: chainIdHex,
+            chainName: chainConfig.name || 'Monad Testnet',
+            rpcUrls: [chainConfig.rpcUrl || 'https://testnet-rpc.monad.xyz'],
+            nativeCurrency: chainConfig.nativeCurrency || {
+              name: 'MON',
+              symbol: 'MON',
+              decimals: 18,
+            },
+            blockExplorerUrls: [chainConfig.explorerUrl || 'https://testnet.monadvision.com'],
+          }],
+        });
+      } catch {
+        // User rejected add-chain, or wallet cannot add — soft-fail.
+      }
+      return;
+    }
+    // User rejected switch or other wallet error — soft-fail.
   }
 }
 

@@ -9,7 +9,7 @@
     { "trait_type": "Version", "value": "1.0.0-phase1" },
     { "trait_type": "Tokenizes Artwork", "value": "No" },
     { "trait_type": "Tokenizes Experience", "value": "Yes" },
-    { "trait_type": "Chain Target", "value": "Monad" },
+    { "trait_type": "Chain Target", "value": "Monad Testnet" },
     { "trait_type": "Cover Type", "value": "Creator-owned architecture mark" }
   ],
   "properties": {

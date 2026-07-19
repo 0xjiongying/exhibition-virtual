@@ -162,7 +162,7 @@
   #controls button,
   .mp-panel button,
   .mp-panel input,
-  .mp-footer {
+  .mp-footer-link {
     cursor: pointer;
   }
   .mp-btn {
@@ -183,7 +183,23 @@
   .mp-footer {
     position: fixed; left: 42px; bottom: 14px; z-index: 8;
     max-width: min(52ch, 46vw); font-size: 10px; letter-spacing: .06em;
-    line-height: 1.45; color: rgba(242,242,240,.38); pointer-events: none;
+    line-height: 1.45; color: rgba(242,242,240,.38);
+    pointer-events: none;
+  }
+  .mp-footer-line { margin: 0; }
+  .mp-footer-actions {
+    margin: 6px 0 0; pointer-events: auto;
+  }
+  .mp-footer-link {
+    font: inherit; font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+    padding: 0; border: 0; background: transparent;
+    color: rgba(242,242,240,.48); text-decoration: underline;
+    text-underline-offset: 3px; text-decoration-color: rgba(242,242,240,.22);
+    transition: color .35s ease, text-decoration-color .35s ease;
+  }
+  .mp-footer-link:hover {
+    color: rgba(242,242,240,.78);
+    text-decoration-color: rgba(242,242,240,.45);
   }
 
   .mp-panel {
@@ -194,6 +210,19 @@
     backdrop-filter: blur(24px) saturate(1.05); color: var(--ink);
     pointer-events: auto; cursor: default;
     box-shadow: 0 28px 70px rgba(0, 0, 0, .55);
+  }
+  .mp-panel-legal {
+    width: min(420px, calc(100vw - 48px));
+    max-height: calc(100vh - 140px);
+  }
+  .mp-disclaimer { margin-top: 4px; }
+  .mp-disclaimer-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(242,242,240,.08); }
+  .mp-disclaimer-section:first-child { margin-top: 12px; padding-top: 0; border-top: 0; }
+  .mp-disclaimer-section .mp-body { margin-top: 8px; font-size: 12.5px; line-height: 1.62; color: rgba(242,242,240,.72); }
+  .mp-disclaimer-section .mp-body + .mp-body { margin-top: 10px; }
+  .mp-disclaimer-dyor {
+    font-weight: 600; letter-spacing: .04em;
+    color: rgba(242,242,240,.88) !important;
   }
   .mp-panel[hidden] { display: none !important; }
   @keyframes mpPanelIn {

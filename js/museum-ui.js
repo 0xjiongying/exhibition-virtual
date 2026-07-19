@@ -1,4 +1,6 @@
-// Smoked-glass museum product UI — passport, curator, discovery, session.
+// Smoked-glass museum product UI — passport, curator, discovery, session, disclaimer.
+
+import { disclaimerPanelMarkup, disclaimerFooterControlMarkup } from './disclaimer.js';
 
 export function mountMuseumChrome() {
   if (document.getElementById('museumProduct')) return document.getElementById('museumProduct');
@@ -11,9 +13,14 @@ export function mountMuseumChrome() {
     <button type="button" id="btnCurator" class="mp-btn" title="AI Curator">Curator</button>
     <button type="button" id="btnDiscover" class="mp-btn" title="Discover works">Discover</button>
 
-    <footer id="copyrightPlate" class="mp-footer">
-      <span>Works on view are attributed for exhibition viewing only — they are not tokenized.</span>
+    <footer id="copyrightPlate" class="mp-footer" aria-label="Copyright and disclaimer">
+      <p class="mp-footer-line">
+        <span id="copyrightNotice">Works on view are attributed for exhibition viewing only — they are not tokenized.</span>
+      </p>
+      <p class="mp-footer-actions">${disclaimerFooterControlMarkup().trim()}</p>
     </footer>
+
+    ${disclaimerPanelMarkup().trim()}
 
     <aside id="panelPassport" class="mp-panel" role="dialog" aria-label="Visitor passport" hidden>
       <header class="mp-panel-h">
@@ -34,7 +41,7 @@ export function mountMuseumChrome() {
         <p id="sessionReadout" class="mp-body">—</p>
         <button type="button" id="btnExportSession" class="mp-btn mp-btn-inline">Export JSON</button>
       </div>
-      <p class="mp-fine" id="passportNote" aria-live="polite">Demo mode stores claims on this device until contracts are deployed on Monad.</p>
+      <p class="mp-fine" id="passportNote" aria-live="polite">Demo mode stores claims on this device until contracts are deployed on Monad Testnet.</p>
     </aside>
 
     <aside id="panelCurator" class="mp-panel" role="dialog" aria-label="AI curator" hidden>
@@ -51,6 +58,7 @@ export function mountMuseumChrome() {
       <div class="mp-chips" id="curatorChips">
         <button type="button" data-q="What does the Exhibition NFT represent?">Exhibition NFT</button>
         <button type="button" data-q="What is the copyright posture?">Copyright</button>
+        <button type="button" data-q="Where is the disclaimer?">Disclaimer</button>
         <button type="button" data-q="Tell me about the hero wall">Hero wall</button>
         <button type="button" data-q="How do Film and Explore work?">Modes</button>
       </div>
@@ -86,6 +94,7 @@ export function mountMuseumChrome() {
   }
 
   document.body.appendChild(root.querySelector('#copyrightPlate'));
+  document.body.appendChild(root.querySelector('#panelDisclaimer'));
   document.body.appendChild(root.querySelector('#panelPassport'));
   document.body.appendChild(root.querySelector('#panelCurator'));
   document.body.appendChild(root.querySelector('#panelDiscover'));
@@ -97,6 +106,8 @@ export function mountMuseumChrome() {
     btnPassport: document.getElementById('btnPassport'),
     btnCurator: document.getElementById('btnCurator'),
     btnDiscover: document.getElementById('btnDiscover'),
+    btnDisclaimer: document.getElementById('btnDisclaimer'),
+    panelDisclaimer: document.getElementById('panelDisclaimer'),
     panelPassport: document.getElementById('panelPassport'),
     panelCurator: document.getElementById('panelCurator'),
     panelDiscover: document.getElementById('panelDiscover'),
